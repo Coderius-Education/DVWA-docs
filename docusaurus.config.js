@@ -13,13 +13,30 @@ const projectName = "DVWA";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Home',
-  tagline: 'DVWA tutorial',
+  title: 'DVWA Security Training — Leer Websecurity — Coderius',
+  tagline: 'Oefen websecurity met DVWA direct in je browser',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
+
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'description',
+        content: 'Oefen websecurity met DVWA direct in je browser. Geen installatie nodig. Leer SQL-injectie, XSS, command injection en meer.',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'keywords',
+        content: 'dvwa tutorial, dvwa zonder installatie, websecurity oefenen, sql injectie leren, command injection tutorial, ethical hacking browser',
+      },
+    },
+  ],
 
   // Set the production url of your site here
   url: `https://dvwa.coderius.nl`,
@@ -39,8 +56,8 @@ const config = {
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: 'nl',
+    locales: ['nl'],
   },
 
   presets: [
@@ -124,6 +141,14 @@ const config = {
       footer: {
         style: 'dark',
         links: [
+          {
+            title: 'Meer van Coderius',
+            items: [
+              { label: 'Leer Python', href: 'https://python.coderius.nl' },
+              { label: 'CTF Challenges', href: 'https://ctf.coderius.nl' },
+              { label: 'Fullstack Development', href: 'https://fullstack.coderius.nl' },
+            ],
+          },
         ],
         copyright: `Licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)`,
       },
