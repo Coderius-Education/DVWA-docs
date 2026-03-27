@@ -81,6 +81,10 @@ const config = {
     ],
   ],
 
+  clientModules: [
+    require.resolve('@xterm/xterm/css/xterm.css'),
+  ],
+
   plugins: [
     [
       '@docusaurus/plugin-content-docs',

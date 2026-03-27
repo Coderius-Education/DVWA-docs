@@ -1,0 +1,58 @@
+---
+sidebar_position: 12
+title: "Lab: Authorization Bypass"
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Lab: Authorization Bypass
+
+In dit lab leer je over authorization bypass — het omzeilen van toegangscontroles om bij informatie te komen waar je geen recht op hebt.
+
+## Wat is authorization bypass?
+
+Authorization (autorisatie) bepaalt wat een ingelogde gebruiker mag doen. Bij een authorization bypass kan een gebruiker acties uitvoeren of data bekijken waarvoor ze geen toestemming hebben.
+
+## Het lab
+
+<BrowserOnly>
+{() => <DvwaLab module="authorization_bypass" />}
+</BrowserOnly>
+
+## Opdrachten
+
+### Opdracht 1: Low Security — Direct Object Reference
+
+1. Start het lab op **Low** niveau
+2. Je bent ingelogd als een gewone gebruiker
+3. Bekijk de URL of parameters goed — zie je een gebruikers-ID?
+4. Wat gebeurt er als je dat ID verandert?
+
+<details>
+<summary>Hint</summary>
+
+Dit heet een **Insecure Direct Object Reference (IDOR)**. De server controleert niet of je het recht hebt om andermans gegevens te bekijken. Verander het ID in de URL om andere gebruikers te bekijken.
+
+</details>
+
+### Opdracht 2: Medium Security — Verborgen velden
+
+1. Schakel naar **Medium** niveau
+2. Het ID staat nu niet meer in de URL
+3. Open de Developer Tools (F12) en bekijk het formulier
+4. Kun je nog steeds bij andermans gegevens?
+
+<details>
+<summary>Hint</summary>
+
+Het ID is verplaatst naar een verborgen formulierveld (`<input type="hidden">`). Met de Developer Tools kun je deze waarde aanpassen voordat je het formulier verstuurt.
+
+</details>
+
+## Wat heb je geleerd?
+
+- **Nooit vertrouwen op client-side beveiliging** — alles in de browser kan aangepast worden
+- De server moet ALTIJD controleren of een gebruiker recht heeft op de gevraagde data
+- Verborgen velden, URL-parameters en cookies zijn geen beveiliging
+- Gebruik altijd **server-side autorisatiecontroles**

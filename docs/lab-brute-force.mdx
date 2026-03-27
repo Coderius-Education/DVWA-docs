@@ -1,0 +1,69 @@
+---
+sidebar_position: 10
+title: "Lab: Brute Force"
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Lab: Brute Force
+
+In dit interactieve lab oefen je met brute force aanvallen op een inlogsysteem. Het lab draait volledig in je browser.
+
+## Wat is brute force?
+
+Bij een brute force aanval probeert een aanvaller systematisch alle mogelijke wachtwoorden uit totdat het juiste wachtwoord gevonden is. Dit is een van de eenvoudigste maar ook meest voorkomende aanvalsmethoden.
+
+## Het lab
+
+<BrowserOnly>
+{() => <DvwaLab module="brute_force" />}
+</BrowserOnly>
+
+## Opdrachten
+
+### Opdracht 1: Low Security
+
+1. Start het lab op **Low** niveau
+2. Probeer in te loggen met standaard gebruikersnamen en wachtwoorden
+3. Bekijk de broncode — wat valt je op aan de beveiliging?
+
+<details>
+<summary>Hint</summary>
+
+Probeer veelgebruikte combinaties zoals `admin` / `password` of `admin` / `admin`. Op het lage niveau is er geen bescherming tegen meerdere pogingen.
+
+</details>
+
+### Opdracht 2: Medium Security
+
+1. Schakel naar **Medium** niveau
+2. Wat is er veranderd ten opzichte van Low?
+3. Is de beveiliging nu voldoende?
+
+<details>
+<summary>Hint</summary>
+
+Op medium niveau is er een vertraging na een mislukte poging. Dit maakt brute force langzamer, maar niet onmogelijk. Een echte aanvaller zou gewoon langer wachten.
+
+</details>
+
+### Opdracht 3: High Security
+
+1. Schakel naar **High** niveau
+2. Welke extra beveiliging is toegevoegd?
+3. Kun je nog steeds inloggen zonder het wachtwoord te weten?
+
+<details>
+<summary>Hint</summary>
+
+Op het hoge niveau wordt een CSRF-token gebruikt. Elke poging heeft een uniek token nodig, waardoor geautomatiseerde aanvallen veel moeilijker worden.
+
+</details>
+
+## Wat heb je geleerd?
+
+- Brute force is een eenvoudige maar effectieve aanvalsmethode
+- Vertragingen maken brute force langzamer, maar stoppen het niet
+- CSRF-tokens en account lockouts zijn effectievere beveiligingen
+- **Sterke wachtwoorden** zijn de beste verdediging

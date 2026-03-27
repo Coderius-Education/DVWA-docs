@@ -4,6 +4,8 @@ sidebar_label: 'Low'
 doc_id: dvwa_tutorial/command_injection/low
 ---
 
+import LinuxTerminal from '@site/src/components/LinuxTerminal';
+
 # Low
 Voor `Command Injection` is het belangrijk dat we ons eerst verdiepen in `ping`.
 Bekijk onderstaande video om een idee te krijgen van wat dit commando doet:
@@ -23,6 +25,16 @@ Ben je vergeten hoe dit moet? Ga dan naar de [cheatsheet](../../docs/cheatsheet)
 Het resultaat van een succesvolle poging zie je hieronder:
 
 ![succes](succes.png)
+
+## Oefen met de terminal
+
+Probeer command injection uit in de gesimuleerde terminal hieronder. Voer bijvoorbeeld in:
+
+- `ping 127.0.0.1` — normaal ping-commando
+- `ping 127.0.0.1; cat /etc/passwd` — command injection met `;`
+- `ping 127.0.0.1 && whoami` — command injection met `&&`
+
+<LinuxTerminal title="Command Injection — Low (geen filter)" />
 
 ## De walkthrough
 

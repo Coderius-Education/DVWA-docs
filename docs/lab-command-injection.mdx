@@ -1,0 +1,70 @@
+---
+sidebar_position: 11
+title: "Lab: Command Injection"
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Lab: Command Injection
+
+In dit lab leer je over command injection — een kwetsbaarheid waarbij je besturingssysteemcommando's kunt uitvoeren via een webapplicatie.
+
+## Wat is command injection?
+
+Command injection ontstaat wanneer een webapplicatie gebruikersinvoer direct doorgeeft aan een systeemcommando. Een aanvaller kan extra commando's toevoegen om ongeautoriseerde acties uit te voeren.
+
+## Het lab
+
+<BrowserOnly>
+{() => <DvwaLab module="command_injection" />}
+</BrowserOnly>
+
+## Opdrachten
+
+### Opdracht 1: Low Security — Basis
+
+1. Start het lab op **Low** niveau
+2. Het formulier vraagt om een IP-adres om te pingen
+3. Voer een normaal IP-adres in, zoals `127.0.0.1`
+4. Probeer nu een extra commando toe te voegen
+
+<details>
+<summary>Hint</summary>
+
+In Linux kun je meerdere commando's achter elkaar uitvoeren met `;`. Probeer: `127.0.0.1; whoami` of `127.0.0.1; cat /etc/passwd`
+
+</details>
+
+### Opdracht 2: Medium Security — Filters omzeilen
+
+1. Schakel naar **Medium** niveau
+2. Sommige tekens worden nu gefilterd. Welke?
+3. Zijn er andere manieren om commando's te combineren?
+
+<details>
+<summary>Hint</summary>
+
+Op medium niveau worden `&&` en `;` gefilterd. Maar er zijn meer manieren om commando's te scheiden in Linux. Probeer `|` (pipe) of `||`.
+
+</details>
+
+### Opdracht 3: High Security — Geavanceerd
+
+1. Schakel naar **High** niveau
+2. Welke extra filters zijn er nu?
+3. Kun je nog steeds een commando injecteren?
+
+<details>
+<summary>Hint</summary>
+
+Op het hoge niveau worden meer speciale tekens gefilterd, maar de filtering is gebaseerd op een zwarte lijst. Is de lijst compleet? Kijk goed naar de broncode.
+
+</details>
+
+## Wat heb je geleerd?
+
+- Command injection is gevaarlijk: aanvallers kunnen alles doen wat de server mag
+- **Invoer filteren** (blacklisting) is niet genoeg — er zijn altijd manieren om filters te omzeilen
+- De juiste verdediging is **invoer valideren** (whitelisting): alleen toestaan wat verwacht wordt
+- Gebruik nooit gebruikersinvoer direct in systeemcommando's
