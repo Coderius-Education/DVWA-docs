@@ -102,4 +102,44 @@ echo $content;
 ?>
 <p style="font-size:0.85em;color:#888">Hint: de server vereist een geldig sessie-token. Kun je het token vinden en meesturen?</p>`,
   },
+  impossible: {
+    title: 'Authorization Bypass — Impossible',
+    description: 'Veilige implementatie: server-side rolcontrole vanuit de database',
+    method: 'GET',
+    php: `<?php
+// IMPOSSIBLE: The role is determined entirely server-side from the database.
+// No client-side parameter, cookie, or token can override it.
+// The logged-in user's role is fetched from the users table.
+
+$db = new SQLite3('/tmp/dvwa.db');
+
+// Simulate a logged-in regular user (not admin)
+$current_user = 'gordonb';
+
+$stmt = $db->prepare("SELECT * FROM users WHERE user = :user");
+$stmt->bindValue(':user', $current_user, SQLITE3_TEXT);
+$result = $stmt->execute();
+$row = $result->fetchArray();
+
+// Role is determined by the user_id — only user_id 1 (admin) has admin access
+$is_admin = ($row && $row['user_id'] == 1);
+
+$content = '';
+if ($is_admin) {
+    $content = '<div style="color:#27c93f;padding:15px;border:2px solid #27c93f;border-radius:8px;margin:10px 0">
+        <h4>Admin Dashboard</h4>
+        <p>Welkom, admin!</p>
+    </div>';
+} else {
+    $content = '<div style="padding:15px;border:2px solid #ffbd2e;border-radius:8px;margin:10px 0">
+        <h4>Gebruiker Dashboard</h4>
+        <p>Welkom, ' . htmlspecialchars($row['first_name']) . '! Je hebt beperkte toegang.</p>
+        <p style="color:#888">Je rol wordt bepaald door de database, niet door client-side parameters.</p>
+    </div>';
+}
+$db->close();
+echo $content;
+?>
+<p style="font-size:0.85em;color:#5f9eea">&#128737; Beveiligd: de rol wordt server-side bepaald vanuit de database. URL-parameters, cookies en tokens hebben geen invloed.</p>`,
+  },
 };

@@ -157,4 +157,44 @@ echo $message;
   <button type="submit" style="padding:8px 20px;cursor:pointer">Submit</button>
 </form>`,
   },
+  impossible: {
+    title: 'Command Injection — Impossible',
+    description: 'Veilige implementatie: strikte IPv4-validatie via regex allowlist',
+    method: 'POST',
+    php: `<?php
+$message = '';
+if (isset($_POST['ip'])) {
+    $target = $_POST['ip'];
+
+    // IMPOSSIBLE: strict allowlist — only valid IPv4 addresses
+    $parts = explode('.', $target);
+    $valid = true;
+    if (count($parts) !== 4) {
+        $valid = false;
+    } else {
+        foreach ($parts as $octet) {
+            if (!is_numeric($octet) || intval($octet) < 0 || intval($octet) > 255) {
+                $valid = false;
+                break;
+            }
+        }
+    }
+
+    if ($valid) {
+        // Safe to execute — input is guaranteed to be a valid IPv4 address
+        $output = "PING $target: 64 bytes, icmp_seq=1 ttl=64 time=0.5ms\\n64 bytes from $target: icmp_seq=2 ttl=64 time=0.4ms";
+        $message = '<pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:4px">' . $output . '</pre>';
+    } else {
+        $message = '<div style="color:#ff5f56;padding:10px;border:1px solid #ff5f56;border-radius:4px;margin:10px 0">Ongeldig IP-adres. Alleen geldige IPv4-adressen zijn toegestaan (bijv. 127.0.0.1).</div>';
+    }
+    $message .= '<p style="font-size:0.85em;color:#5f9eea">&#128737; Beveiliging: invoer wordt gevalideerd als geldig IPv4-adres. Geen command chaining mogelijk.</p>';
+}
+echo $message;
+?>
+<h3>Ping een IP-adres</h3>
+<form method="POST">
+  <div style="margin:8px 0"><label>IP-adres:</label><br><input type="text" name="ip" placeholder="127.0.0.1" style="padding:6px;width:250px" /></div>
+  <button type="submit" style="padding:8px 20px;cursor:pointer">Submit</button>
+</form>`,
+  },
 };

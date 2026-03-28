@@ -47,6 +47,12 @@
   border: 1px solid #ff5f56;
 }
 
+.levelImpossible {
+  background: #5f9eea22;
+  color: #5f9eea;
+  border: 1px solid #5f9eea;
+}
+
 /* Source toggle button */
 .sourceToggle {
   padding: 0.3rem 0.75rem;

@@ -125,9 +125,25 @@ const config = {
           },
 
           {
-            to: 'dvwa_tutorial/command_injection/low', // Link to the new section
-            label: 'DVWA challenges',
+            to: 'dvwa_tutorial/command_injection/low',
+            label: 'DVWA Challenges',
             position: 'left',
+            items: [
+              { to: 'dvwa_tutorial/brute_force/low', label: 'Brute Force' },
+              { to: 'dvwa_tutorial/command_injection/low', label: 'Command Injection' },
+              { to: 'dvwa_tutorial/authorization_bypass/low', label: 'Authorization Bypass' },
+              { to: 'dvwa_tutorial/sql_injection/low', label: 'SQL Injection' },
+              { to: 'dvwa_tutorial/sql_injection_blind/low', label: 'SQL Injection (Blind)' },
+              { to: 'dvwa_tutorial/xss_reflected/low', label: 'XSS (Reflected)' },
+              { to: 'dvwa_tutorial/xss_stored/low', label: 'XSS (Stored)' },
+              { to: 'dvwa_tutorial/xss_dom/low', label: 'XSS (DOM)' },
+              { to: 'dvwa_tutorial/csrf/low', label: 'CSRF' },
+              { to: 'dvwa_tutorial/file_inclusion/low', label: 'File Inclusion' },
+              { to: 'dvwa_tutorial/file_upload/low', label: 'File Upload' },
+              { to: 'dvwa_tutorial/weak_session_ids/low', label: 'Weak Session IDs' },
+              { to: 'dvwa_tutorial/csp_bypass/low', label: 'CSP Bypass' },
+              { to: 'dvwa_tutorial/javascript_attacks/low', label: 'JavaScript Attacks' },
+            ],
           },
 
           {

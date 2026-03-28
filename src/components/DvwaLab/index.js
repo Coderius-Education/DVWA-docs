@@ -4,187 +4,44 @@ import styles from './styles.module.css';
 import { bruteForce } from './modules/brute_force';
 import { commandInjection } from './modules/command_injection';
 import { authorizationBypass } from './modules/authorization_bypass';
+import { sqlInjection } from './modules/sql_injection';
+import { sqlInjectionBlind } from './modules/sql_injection_blind';
+import { xssReflected } from './modules/xss_reflected';
+import { xssStored } from './modules/xss_stored';
+import { xssDom } from './modules/xss_dom';
+import { csrf } from './modules/csrf';
+import { fileInclusion } from './modules/file_inclusion';
+import { fileUpload } from './modules/file_upload';
+import { weakSessionIds } from './modules/weak_session_ids';
+import { cspBypass } from './modules/csp_bypass';
+import { javascriptAttacks } from './modules/javascript_attacks';
+import { runPhp } from './PhpWasmProvider';
 
 const modules = {
   brute_force: bruteForce,
   command_injection: commandInjection,
   authorization_bypass: authorizationBypass,
+  sql_injection: sqlInjection,
+  sql_injection_blind: sqlInjectionBlind,
+  xss_reflected: xssReflected,
+  xss_stored: xssStored,
+  xss_dom: xssDom,
+  csrf: csrf,
+  file_inclusion: fileInclusion,
+  file_upload: fileUpload,
+  weak_session_ids: weakSessionIds,
+  csp_bypass: cspBypass,
+  javascript_attacks: javascriptAttacks,
 };
 
 /**
- * Simulate PHP execution in JavaScript.
- * Parses the PHP source and the form data, then produces the same HTML
- * output that the PHP code would generate. The PHP source is shown for
- * educational purposes; the simulation runs entirely in JS.
+ * Simulate shell commands in JavaScript (for command injection only).
+ * Command injection needs OS-level commands that php-wasm cannot provide,
+ * so we keep the JS simulation for this module.
  */
-function simulatePhp(phpSource, moduleName, level, formData) {
-  const key = `${moduleName}_${level}`;
-
-  // --- Brute Force (low / medium / high) ---
-  if (moduleName === 'brute_force') {
-    const users = { admin: 'password', user1: '12345', student: 'welkom' };
-    let message = '';
-    const username = formData.username || '';
-    const password = formData.password || '';
-
-    if (username && password) {
-      if (users[username] && users[username] === password) {
-        message = `<div style="color:#27c93f;padding:10px;border:1px solid #27c93f;border-radius:4px;margin:10px 0">Welkom, ${escapeHtml(username)}!${level === 'low' ? ' Je hebt toegang.' : ''}</div>`;
-      } else {
-        if (level === 'low') {
-          message = '<div style="color:#ff5f56;padding:10px;border:1px solid #ff5f56;border-radius:4px;margin:10px 0">Gebruikersnaam of wachtwoord onjuist.</div>';
-        } else if (level === 'medium') {
-          message = '<div style="color:#ff5f56;padding:10px;border:1px solid #ff5f56;border-radius:4px;margin:10px 0">Gebruikersnaam of wachtwoord onjuist.<br><small>&#9201; Bij een fout antwoord wordt het systeem 2 seconden geblokkeerd.</small></div>';
-        } else {
-          message = '<div style="color:#ff5f56;padding:10px;border:1px solid #ff5f56;border-radius:4px;margin:10px 0">Gebruikersnaam of wachtwoord onjuist.<br><small>&#128274; Anti-CSRF token: elke poging vereist een nieuw token.</small></div>';
-        }
-      }
-    }
-
-    const token = Math.random().toString(36).substring(2, 18);
-    let tokenFields = '';
-    if (level === 'high') {
-      tokenFields = `<input type="hidden" name="user_token" value="${token}" />\n`;
-    }
-    let tokenDisplay = '';
-    if (level === 'high') {
-      tokenDisplay = `<p style="font-size:0.8em;color:#888">Token: ${token}</p>`;
-    }
-
-    return `${message}
-<h3>Login</h3>
-<form method="GET">
-  <div style="margin:8px 0"><label>Username:</label><br><input type="text" name="username" style="padding:6px;width:200px" /></div>
-  <div style="margin:8px 0"><label>Password:</label><br><input type="password" name="password" style="padding:6px;width:200px" /></div>
-  ${tokenFields}<button type="submit" style="padding:8px 20px;cursor:pointer;margin-top:8px">Login</button>
-</form>
-${tokenDisplay}`;
-  }
-
-  // --- Command Injection (low / medium / high) ---
-  if (moduleName === 'command_injection') {
-    let message = '';
-    const ip = formData.ip || '';
-
-    if (ip) {
-      let target = ip;
-
-      // Apply filters based on level
-      if (level === 'medium') {
-        target = target.replace(/&&/g, '');
-        target = target.replace(/;/g, '');
-      } else if (level === 'high') {
-        target = target.replace(/&&/g, '');
-        target = target.replace(/;/g, '');
-        target = target.replace(/\|\| /g, '');
-        target = target.replace(/\| /g, '');
-      }
-
-      const fullCmd = 'ping -c 4 ' + target;
-      const output = simulateShellExec(fullCmd);
-      message = `<pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:4px;overflow-x:auto">${escapeHtml(output)}</pre>`;
-
-      if (level === 'medium') {
-        message += '<p style="font-size:0.85em;color:#888">Gefilterde tekens: <code>&&</code> <code>;</code></p>';
-      } else if (level === 'high') {
-        message += '<p style="font-size:0.85em;color:#888">Gefilterde tekens: <code>&&</code> <code>;</code> <code>|| </code> <code>| </code></p>';
-      }
-    }
-
-    return `${message}
-<h3>Ping een IP-adres</h3>
-<form method="POST">
-  <div style="margin:8px 0"><label>IP-adres:</label><br><input type="text" name="ip" placeholder="127.0.0.1" style="padding:6px;width:250px" /></div>
-  <button type="submit" style="padding:8px 20px;cursor:pointer">Submit</button>
-</form>`;
-  }
-
-  // --- Authorization Bypass (low / medium / high) ---
-  if (moduleName === 'authorization_bypass') {
-    if (level === 'high') {
-      // High level: session token required
-      if (!window.__dvwa_auth_token) {
-        window.__dvwa_auth_token = Math.random().toString(36).substring(2, 18);
-      }
-      const sessionToken = window.__dvwa_auth_token;
-      const role = formData.role || 'user';
-      const submittedToken = formData.token || '';
-
-      let content = '';
-      if (role === 'admin') {
-        if (submittedToken === sessionToken) {
-          content = `<div style="color:#27c93f;padding:15px;border:2px solid #27c93f;border-radius:8px;margin:10px 0">
-            <h4>Admin Dashboard</h4>
-            <p>Welkom, admin! Toegang geverifieerd met sessie-token.</p>
-            <ul>
-                <li>Database wachtwoord: <code>supersecret123</code></li>
-                <li>API key: <code>sk-dvwa-demo-key-12345</code></li>
-                <li>Sessies actief: 42</li>
-            </ul>
-        </div>`;
-        } else {
-          content = `<div style="color:#ff5f56;padding:15px;border:2px solid #ff5f56;border-radius:8px;margin:10px 0">
-            <h4>Toegang geweigerd</h4>
-            <p>Ongeldig sessie-token. Je hebt niet het juiste token meegestuurd.</p>
-        </div>`;
-        }
-      } else {
-        content = `<div style="padding:15px;border:2px solid #ffbd2e;border-radius:8px;margin:10px 0">
-            <h4>Gebruiker Dashboard</h4>
-            <p>Je hebt beperkte toegang.</p>
-            <p style="color:#888">Sessie-token: <code>${escapeHtml(sessionToken)}</code></p>
-        </div>`;
-      }
-
-      return `${content}\n<p style="font-size:0.85em;color:#888">Hint: de server vereist een geldig sessie-token. Kun je het token vinden en meesturen?</p>`;
-    }
-
-    const roleParam = level === 'low' ? 'role' : 'cookie_role';
-    const role = formData[roleParam] || 'user';
-
-    let content = '';
-    if (role === 'admin') {
-      const adminDetails = level === 'low'
-        ? `<p>Welkom, admin! Hier zijn de geheime gegevens:</p>
-        <ul>
-            <li>Database wachtwoord: <code>supersecret123</code></li>
-            <li>API key: <code>sk-dvwa-demo-key-12345</code></li>
-            <li>Aantal gebruikers: 1337</li>
-        </ul>`
-        : `<p>Welkom, admin!</p>
-        <ul>
-            <li>Server status: <span style="color:#27c93f">Online</span></li>
-            <li>Backup: laatste backup 2 uur geleden</li>
-        </ul>`;
-      content = `<div style="color:#27c93f;padding:15px;border:2px solid #27c93f;border-radius:8px;margin:10px 0">
-        <h4>Admin Dashboard</h4>
-        ${adminDetails}
-    </div>`;
-    } else {
-      const roleDisplay = level === 'low'
-        ? `<p style="color:#888">Je bent ingelogd als: <strong>${escapeHtml(role)}</strong></p>`
-        : `<p style="color:#888">Cookie role: <code>${escapeHtml(role)}</code></p>`;
-      content = `<div style="padding:15px;border:2px solid #ffbd2e;border-radius:8px;margin:10px 0">
-        <h4>Gebruiker Dashboard</h4>
-        <p>${level === 'low' ? 'Welkom! Je hebt beperkte toegang.' : 'Je hebt beperkte toegang.'}</p>
-        ${roleDisplay}
-    </div>`;
-    }
-
-    const hint = level === 'low'
-      ? '<p style="font-size:0.85em;color:#888">Hint: bekijk de URL-parameters...</p>'
-      : '<p style="font-size:0.85em;color:#888">Hint: de rol zit in een cookie. Open Developer Tools &rarr; Application &rarr; Cookies...</p>';
-
-    return `${content}\n${hint}`;
-  }
-
-  return '<p>Module niet gevonden.</p>';
-}
-
 function simulateShellExec(cmd) {
   const parts = cmd.split(/([;]|&&|\|\||\|)/);
   let output = '';
-
   for (const part of parts) {
     const trimmed = part.trim();
     if ([';', '&&', '||', '|'].includes(trimmed)) continue;
@@ -220,11 +77,62 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+/**
+ * Run command injection simulation in JS (shell commands cannot run in php-wasm).
+ */
+function simulateCommandInjection(level, formData) {
+  let message = '';
+  const ip = formData.ip || '';
+
+  if (ip) {
+    let target = ip;
+    if (level === 'medium') {
+      target = target.replace(/&&/g, '');
+      target = target.replace(/;/g, '');
+    } else if (level === 'high') {
+      target = target.replace(/&&/g, '');
+      target = target.replace(/;/g, '');
+      target = target.replace(/\|\| /g, '');
+      target = target.replace(/\| /g, '');
+    } else if (level === 'impossible') {
+      // Strict IPv4 allowlist
+      if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(target.trim())) {
+        message = '<div style="color:#ff5f56;padding:10px;border:1px solid #ff5f56;border-radius:4px;margin:10px 0">Ongeldig IP-adres. Alleen IPv4-adressen (bijv. 127.0.0.1) zijn toegestaan.</div>';
+        return message + commandInjectionForm(level);
+      }
+    }
+
+    const fullCmd = 'ping -c 4 ' + target;
+    const output = simulateShellExec(fullCmd);
+    message = `<pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:4px;overflow-x:auto">${escapeHtml(output)}</pre>`;
+
+    if (level === 'medium') {
+      message += '<p style="font-size:0.85em;color:#888">Gefilterde tekens: <code>&&</code> <code>;</code></p>';
+    } else if (level === 'high') {
+      message += '<p style="font-size:0.85em;color:#888">Gefilterde tekens: <code>&&</code> <code>;</code> <code>|| </code> <code>| </code></p>';
+    } else if (level === 'impossible') {
+      message += '<p style="font-size:0.85em;color:#888">Beveiliging: strikte IPv4-validatie via regex.</p>';
+    }
+  }
+
+  return message + commandInjectionForm(level);
+}
+
+function commandInjectionForm(level) {
+  return `
+<h3>Ping een IP-adres</h3>
+<form method="POST">
+  <div style="margin:8px 0"><label>IP-adres:</label><br><input type="text" name="ip" placeholder="127.0.0.1" style="padding:6px;width:250px" /></div>
+  <button type="submit" style="padding:8px 20px;cursor:pointer">Submit</button>
+</form>`;
+}
+
 function getLevelColor(level) {
   switch (level) {
     case 'low': return 'levelLow';
     case 'medium': return 'levelMedium';
     case 'high': return 'levelHigh';
+    case 'impossible': return 'levelImpossible';
     default: return 'levelLow';
   }
 }
@@ -235,55 +143,75 @@ function DvwaLabInner({ module: moduleName, level, title }) {
   const [htmlOutput, setHtmlOutput] = useState('');
   const [showSource, setShowSource] = useState(false);
   const [error, setError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState('Lab wordt geladen...');
   const iframeRef = useRef(null);
 
   const config = modules[moduleName]?.[level];
 
-  const runSimulation = useCallback((formData = {}) => {
+  const executePhp = useCallback(async (formData = {}) => {
     if (!config) return;
+
+    // Command injection uses JS simulation (shell commands don't work in php-wasm)
+    if (moduleName === 'command_injection') {
+      const output = simulateCommandInjection(level, formData);
+      setHtmlOutput(output);
+      setError(null);
+      return;
+    }
+
     try {
-      const output = simulatePhp(config.php, moduleName, level, formData);
+      const getData = config.method === 'GET' ? formData : {};
+      const postData = config.method === 'POST' ? formData : {};
+      const output = await runPhp(config.php, getData, postData);
       setHtmlOutput(output);
       setError(null);
     } catch (err) {
-      setError('Fout bij uitvoering: ' + err.message);
+      setError('Fout bij PHP-uitvoering: ' + err.message);
     }
   }, [config, moduleName, level]);
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback(async () => {
     setIsStarted(true);
     setIsLoading(true);
-    // Small delay to show loading state
-    setTimeout(() => {
-      runSimulation({});
+
+    if (moduleName !== 'command_injection') {
+      setLoadingMessage('PHP WASM wordt geladen (eerste keer kan even duren)...');
+    }
+
+    try {
+      await executePhp({});
+    } catch (err) {
+      setError('Fout bij starten: ' + err.message);
+    } finally {
       setIsLoading(false);
-    }, 300);
-  }, [runSimulation]);
+    }
+  }, [executePhp, moduleName]);
 
   useEffect(() => {
     function handleMessage(event) {
       if (event.data && event.data.type === 'dvwa-form') {
         const formData = event.data.data || {};
+
         // For medium brute force, add a simulated delay
         if (moduleName === 'brute_force' && level === 'medium') {
-          const users = { admin: 'password', user1: '12345', student: 'welkom' };
-          const isCorrect = users[formData.username] && users[formData.username] === formData.password;
-          if (!isCorrect && formData.username && formData.password) {
-            setIsLoading(true);
-            setTimeout(() => {
-              runSimulation(formData);
-              setIsLoading(false);
-            }, 2000);
-            return;
-          }
+          setIsLoading(true);
+          setLoadingMessage('Verwerken (2 sec vertraging)...');
+          setTimeout(async () => {
+            await executePhp(formData);
+            setIsLoading(false);
+          }, 2000);
+          return;
         }
-        runSimulation(formData);
+
+        setIsLoading(true);
+        setLoadingMessage('Verwerken...');
+        executePhp(formData).finally(() => setIsLoading(false));
       }
     }
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [runSimulation, moduleName, level]);
+  }, [executePhp, moduleName, level]);
 
   if (!config) {
     return (
@@ -355,6 +283,9 @@ function DvwaLabInner({ module: moduleName, level, title }) {
     word-wrap: break-word;
   }
   a { color: #e94560; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+  th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+  th { background: #16213e; }
 </style>
 </head>
 <body>
@@ -404,7 +335,7 @@ ${htmlOutput}
       {isStarted && isLoading && (
         <div className={styles.loading}>
           <div className={styles.spinner}></div>
-          <p>Lab wordt geladen...</p>
+          <p>{loadingMessage}</p>
         </div>
       )}
 
