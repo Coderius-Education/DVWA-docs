@@ -1,0 +1,55 @@
+---
+sidebar_position: 3
+sidebar_label: 'High'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Authorization Bypass — High
+
+Op het High niveau gebruikt de programmeur JavaScript om controles uit te voeren vóórdat het formulier verstuurd wordt.
+
+## 1. Predict (Voorspel)
+
+De ontwikkelaar heeft een stukje JavaScript toegevoegd aan het formulier:
+```javascript
+form.onsubmit = function() {
+    if (geselecteerde_id != mijn_eigen_id) {
+        alert("Je mag dit account niet bekijken!");
+        return false; // Stop het verzenden
+    }
+}
+```
+
+**Vraag:** Waar draait deze controle-code en waarom is dit zinloos tegen een gerichte aanval?
+
+<details>
+<summary>Antwoord</summary>
+
+JavaScript draait in de browser van de gebruiker, op hun eigen apparaat (Client-Side). Als hacker kun je in de Developer Tools simpelweg JavaScript uitzetten, of het script verwijderen, of de gegevens via een ander programma direct naar de server sturen waardoor de JavaScript validatie compleet gepasseerd wordt!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab en open direct je Developer Tools.
+
+<DvwaLab module="authorization_bypass" level="high" />
+
+Probeer de waarde van de dropdown in de HTML aan te passen en te verzenden zoals je op het Medium level deed. Wat gebeurt er? Je krijgt waarschijnlijk een foutmelding op je scherm (JavaScript grijpt in).
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Jouw doel is om het verzoek tóch naar de server te forceren en het profiel van iemand anders op te halen.
+
+<details>
+<summary>Tip</summary>
+
+Als JavaScript de belemmering is... wat kun je in een browser dan doen met JavaScript?
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Je kunt via de instellingen van je browser JavaScript tijdelijk uitschakelen (of een extensie zoals NoScript gebruiken). Als je daarna het formulierveld met F12 aanpast naar `value="1"` en op Submit klikt, wordt het formulier verstuurd zonder dat de JavaScript-controle wordt geactiveerd! De server levert de data weer braaf af.
+</details>

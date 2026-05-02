@@ -1,0 +1,134 @@
+---
+sidebar_position: 11
+title: "Lab: Command Injection"
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Lab: Command Injection
+
+In dit lab leer je over **command injection** — een kwetsbaarheid waarbij je besturingssysteemcommando's kunt uitvoeren via een webapplicatie.
+
+<details>
+<summary>Diepgaande theorie (optioneel): Wat is command injection precies?</summary>
+
+Command injection ontstaat wanneer een webapplicatie gebruikersinvoer direct doorgeeft aan een onderliggend systeemcommando (bijvoorbeeld via een terminal of command prompt). Omdat de invoer niet goed wordt gecontroleerd, kan een aanvaller extra commando's "injecteren" en zo ongeautoriseerde acties uitvoeren op de server.
+</details>
+
+## 1. Predict (Voorspel)
+
+Kijk eens naar de volgende (vereenvoudigde) code die wordt gebruikt om een IP-adres te pingen:
+
+```php
+$target = $_REQUEST[ 'ip' ];
+$cmd = shell_exec( 'ping -c 4 ' . $target );
+echo $cmd;
+```
+
+**Vraag:** Wat denk je dat dit script doet als een gebruiker de volgende tekst invult bij het IP-adres: `127.0.0.1; whoami`?
+
+<details>
+<summary>Antwoord</summary>
+
+De variabele `$target` wordt letterlijk in het commando geplakt. Het uiteindelijke commando wordt dan: `ping -c 4 127.0.0.1; whoami`. 
+In Linux betekent de puntkomma (`;`) dat het eerste commando wordt afgesloten en een nieuw commando begint. Het script pingt dus eerst zichzelf en voert daarna het `whoami` commando uit, wat de huidige gebruiker van de server toont.
+</details>
+
+## 2. Run (Uitvoeren)
+
+Laten we dit in de praktijk brengen. Hieronder zie je de lab-omgeving.
+
+<BrowserOnly>
+{() => <DvwaLab module="command_injection" />}
+</BrowserOnly>
+
+### Opdracht 1: Low Security — Basis
+
+1. Start het lab op **Low** niveau.
+2. Voer een normaal IP-adres in, zoals `127.0.0.1` en klik op Submit.
+3. Probeer nu zelf een extra commando toe te voegen om erachter te komen als welke gebruiker de webserver draait.
+
+<details>
+<summary>Tip</summary>
+
+Denk terug aan de *Predict* vraag. Je kunt het puntkomma (`;`) teken gebruiken in Linux om meerdere commando's achter elkaar te plakken.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Vul in het veld in: `127.0.0.1; whoami` of `127.0.0.1; id`.
+</details>
+
+## 3. Investigate (Onderzoeken)
+
+Klik in de lab-omgeving op de knop **"Bekijk broncode"** (deze verschijnt bovenaan nadat je het lab hebt gestart).
+
+**Vraag:** Kijk naar de broncode van het **Medium** niveau. Welke tekens worden hier gefilterd om command injection te voorkomen?
+
+<details>
+<summary>Tip</summary>
+
+Zoek naar de regels waar `str_replace` wordt gebruikt. Dit PHP commando vervangt bepaalde tekens door een lege string (hij haalt ze dus weg).
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+De tekens `&&` en `;` worden weggehaald.
+</details>
+
+## 4. Modify & Make (Aanpassen & Maken)
+
+Nu we weten hoe het filter werkt, gaan we proberen het te omzeilen.
+
+### Opdracht 2: Medium Security — Filters omzeilen
+
+1. Schakel het lab naar **Medium** niveau en start het.
+2. Probeer de bestanden in de huidige map te bekijken (het `ls` commando), ondanks dat `&&` en `;` geblokkeerd zijn.
+
+<details>
+<summary>Tip</summary>
+
+Er zijn in Linux meer manieren om commando's te combineren. Kijk in de cheatsheet onder *Linux Commando's* naar alternatieven voor de puntkomma.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Omdat de `;` en `&&` gefilterd worden, kun je de pipe (`|`) of dubbele pipe (`||`) gebruiken. Vul bijvoorbeeld in: `127.0.0.1 | ls` of `127.0.0.1 || ls`.
+</details>
+
+### Opdracht 3: High Security — Geavanceerd
+
+1. Schakel naar **High** niveau.
+2. Bestudeer eerst weer de broncode. Zie je een foutje (of een tekortkoming) in de manier waarop de karakters worden gefilterd?
+3. Bedenk een manier om toch een commando te injecteren.
+
+<details>
+<summary>Tip</summary>
+
+Kijk heel nauwkeurig naar de spaties in de `$substitutions` array in de broncode. Wordt de enkele pipe (`|`) in álle gevallen tegengehouden?
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+In de broncode staat `'| ' => ''`. Let op de spatie na het pipe-teken! Dit betekent dat een pipe *mét* een spatie erachter wordt gefilterd, maar een pipe *zónder* spatie niet.
+Vul in: `127.0.0.1|ls` (zonder spaties rond de pipe). Dit glipt door de filter heen!
+</details>
+
+## 5. Er gaat iets mis...
+
+Wat gebeurt er als je op "Impossible" security niveau `127.0.0.1; whoami` intypt? 
+Je krijgt een melding zoals: *"Ongeldig IP-adres. Alleen IPv4-adressen (bijv. 127.0.0.1) zijn toegestaan."* Waarom?
+
+Op *Impossible* niveau wordt er geen gebruik meer gemaakt van "blacklisting" (het proberen weg te filteren van alle slechte tekens). Zoals we zagen bij Medium en High is blacklisting heel gevoelig voor creatieve hacks. 
+In plaats daarvan gebruiken ze op *Impossible* niveau **whitelisting**. De broncode controleert of de invoer *exact* een IP-adres is, vaak met behulp van een reguliere expressie (regex). Omdat `whoami` of `;` niet in een geldig IP-adres passen, wordt de rest van de code überhaupt niet meer uitgevoerd. Dit is de enige écht veilige methode!
+
+## Wat heb je geleerd?
+
+- Command injection is een ernstige kwetsbaarheid waarmee aanvallers een server kunnen besturen.
+- **Blacklisting** (slechte tekens filteren) faalt vaak in de praktijk.
+- **Whitelisting** (alleen geldige patronen toestaan) is de juiste manier van beveiligen.

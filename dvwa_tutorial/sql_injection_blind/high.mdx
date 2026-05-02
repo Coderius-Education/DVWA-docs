@@ -1,0 +1,50 @@
+---
+sidebar_position: 3
+sidebar_label: 'High'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# SQL Injection (Blind) — High
+
+Op het High level probeert de applicatie (net als bij normale SQL Injection) je aanval af te weren door het invulveld op een andere pagina of popup te zetten met een Session ID.
+
+## 1. Predict (Voorspel)
+
+De server gebruikt een aparte POST-request in een cookie (`$_COOKIE['id']`) of session in plaats van de directe GET URL:
+
+```php
+$id = $_COOKIE['id'];
+$query  = "SELECT first_name, last_name FROM users WHERE user_id = '$id' LIMIT 1;";
+```
+
+**Vraag:** Waarom maakt het de hacker helemaal niets uit of de data via een GET-parameter, POST-verzoek of via een Cookie binnenkomt?
+
+<details>
+<summary>Antwoord</summary>
+
+Elk van deze kanalen (GET, POST, Cookies, HTTP Headers) is data die vanuit de browser van de hacker (Client) naar de server stroomt. Als de server deze stroom oppakt en direct de database infietst zonder te filteren, ontstaat er altijd SQL Injection! Met de Developer Tools kan een hacker een Cookie net zo makkelijk veranderen als een simpel woordje in de adresbalk.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. (Afhankelijk van je DVWA configuratie zie je een popup of apart formulier).
+
+<DvwaLab module="sql_injection_blind" level="high" />
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Jouw taak is om via de Time-Based (of Boolean) payload in de extra pagina/cookie te breken.
+
+<details>
+<summary>Tip</summary>
+
+Als je de Developer Tools of een Browser Extensie hebt, pauzeer of modificeer dan je HTTP verzoek. Wijzig de `cookie` waarde (of het popup veld) naar de klassieke time-based bypass: `1' AND SLEEP(5) #`.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Door `1' AND SLEEP(5) #` in te sturen, breek je uit de string (met de single quote) en forceer je de database server om via een Time-Based attack weer een pauze van 5 seconden in te lassen. 
+</details>

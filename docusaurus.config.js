@@ -13,13 +13,30 @@ const projectName = "DVWA";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Home',
-  tagline: 'DVWA tutorial',
+  title: 'DVWA Security Training — Leer Websecurity — Coderius',
+  tagline: 'Oefen websecurity met DVWA direct in je browser',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
+
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'description',
+        content: 'Oefen websecurity met DVWA direct in je browser. Geen installatie nodig. Leer SQL-injectie, XSS, command injection en meer.',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'keywords',
+        content: 'dvwa tutorial, dvwa zonder installatie, websecurity oefenen, sql injectie leren, command injection tutorial, ethical hacking browser',
+      },
+    },
+  ],
 
   // Set the production url of your site here
   url: `https://dvwa.coderius.nl`,
@@ -39,8 +56,8 @@ const config = {
   // useful metadata like html lang. For example, if your site is Chinese, you
   // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: 'nl',
+    locales: ['nl'],
   },
 
   presets: [
@@ -62,6 +79,10 @@ const config = {
         },
       }),
     ],
+  ],
+
+  clientModules: [
+    require.resolve('@xterm/xterm/css/xterm.css'),
   ],
 
   plugins: [
@@ -104,9 +125,25 @@ const config = {
           },
 
           {
-            to: 'dvwa_tutorial/command_injection/low', // Link to the new section
-            label: 'DVWA challenges',
+            to: 'dvwa_tutorial/command_injection/low',
+            label: 'DVWA Challenges',
             position: 'left',
+            items: [
+              { to: 'dvwa_tutorial/brute_force/low', label: 'Brute Force' },
+              { to: 'dvwa_tutorial/command_injection/low', label: 'Command Injection' },
+              { to: 'dvwa_tutorial/authorization_bypass/low', label: 'Authorization Bypass' },
+              { to: 'dvwa_tutorial/sql_injection/low', label: 'SQL Injection' },
+              { to: 'dvwa_tutorial/sql_injection_blind/low', label: 'SQL Injection (Blind)' },
+              { to: 'dvwa_tutorial/xss_reflected/low', label: 'XSS (Reflected)' },
+              { to: 'dvwa_tutorial/xss_stored/low', label: 'XSS (Stored)' },
+              { to: 'dvwa_tutorial/xss_dom/low', label: 'XSS (DOM)' },
+              { to: 'dvwa_tutorial/csrf/low', label: 'CSRF' },
+              { to: 'dvwa_tutorial/file_inclusion/low', label: 'File Inclusion' },
+              { to: 'dvwa_tutorial/file_upload/low', label: 'File Upload' },
+              { to: 'dvwa_tutorial/weak_session_ids/low', label: 'Weak Session IDs' },
+              { to: 'dvwa_tutorial/csp_bypass/low', label: 'CSP Bypass' },
+              { to: 'dvwa_tutorial/javascript_attacks/low', label: 'JavaScript Attacks' },
+            ],
           },
 
           {
@@ -124,12 +161,21 @@ const config = {
       footer: {
         style: 'dark',
         links: [
+          {
+            title: 'Meer van Coderius',
+            items: [
+              { label: 'Leer Python', href: 'https://python.coderius.nl' },
+              { label: 'CTF Challenges', href: 'https://ctf.coderius.nl' },
+              { label: 'Fullstack Development', href: 'https://fullstack.coderius.nl' },
+            ],
+          },
         ],
         copyright: `Licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)`,
       },
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
+        additionalLanguages: ['php'],
       },
     }),
 };

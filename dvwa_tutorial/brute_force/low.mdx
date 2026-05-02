@@ -1,0 +1,103 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+doc_id: dvwa_tutorial/brute_force/low
+hide_table_of_contents: true
+---
+
+# Brute Force — Low
+
+Start `DVWA` in je Kali-omgeving en ga naar de challenge `Brute Force`. Zorg dat je `DVWA Security` op **low** hebt staan. (Ben je vergeten hoe dit moet? Ga dan naar de [cheatsheet](../../docs/cheatsheet)).
+
+## 1. Predict (Voorspel)
+
+Ga naar http://localhost/DVWA/vulnerabilities/brute/ in je Kali-browser.
+Probeer in te loggen met een willekeurige gebruikersnaam en een nep-wachtwoord.
+
+**Vraag:** Kijk goed naar de adresbalk (URL) in je browser nadat je op Login hebt gedrukt. Wat valt je op aan de manier waarop jouw gebruikersnaam en wachtwoord worden verstuurd?
+
+<details>
+<summary>Antwoord</summary>
+
+De gebruikersnaam en het wachtwoord zijn letterlijk zichtbaar in de adresbalk! Dit betekent dat het inlogformulier gebruikt maakt van een `GET` request. Dit is zeer onveilig, omdat iedereen die meekijkt (of in de browsergeschiedenis kijkt) direct de wachtwoorden kan zien. 
+Je kunt deze gegevens in de adresbalk ook razendsnel handmatig aanpassen om een 2e of 3e poging te doen.
+</details>
+
+## 2. Installatie & Voorbereiding (Run)
+
+Handmatig wachtwoorden raden duurt veel te lang. We gaan een hacker-tool genaamd **Hydra** gebruiken om dit voor ons te automatiseren.
+
+Open de terminal in `kali-linux` op `WSL` en draai het volgende commando om de tool te installeren en een bekende lijst met veelgebruikte wachtwoorden (`rockyou.txt`) uit te pakken:
+
+```bash
+sudo apt install hydra wordlists && sudo gunzip /usr/share/wordlists/rockyou.txt.gz
+```
+
+## 3. Investigate (Onderzoeken)
+
+Om Hydra te kunnen gebruiken, moeten we de tool vertellen hoe het inlogformulier van DVWA er onder water uitziet.
+
+### Stap 1: PHP Session ID
+
+Hydra moet zich voordoen als jouw browser. Jouw browser heeft een uniek identificatienummer gekregen van de DVWA-server. Dit is het *Session ID*.
+1. Druk op **F12** om de browser "inspector" weer te geven.
+2. Kies bovenin de tab **Application** (in sommige browsers "Storage").
+3. Navigeer links in het menu naar **Cookies** -> `http://localhost`.
+4. Zoek de cookie met de naam `PHPSESSID`. Kopieer de `Value` en bewaar deze even (bijvoorbeeld in Kladblok).
+
+### Stap 2: Veldnamen vinden
+
+Hydra moet weten hoe de invoervelden heten in de HTML, anders weet hij niet waar hij de lijst met wachtwoorden moet "typen".
+1. Ga in de inspector naar de tab **Elements** (of klik met je rechtermuisknop op het veld 'Username' en kies *Inspecteren*).
+2. Zoek in de HTML-code naar het veld `<input type="text" ...>`. Wat is de waarde van het `name` attribuut hiervan? Dit is je `USERVELDNAAM`.
+3. Doe hetzelfde voor het wachtwoordveld. Dit is je `PASSWORDVELDNAAM`.
+
+<details>
+<summary>Tip</summary>
+Kijk naar attributen zoals `name="username"`.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+De `USERVELDNAAM` is simpelweg `username`. De `PASSWORDVELDNAAM` is `password`.
+</details>
+
+### Stap 3: De foutmelding vangen
+
+Hydra is supersnel en probeert 100 wachtwoorden per seconde, maar hoe wéét Hydra of een wachtwoord goed is? Dat doet hij door te kijken of een specifiek woordje op de pagina verschijnt nadat hij een gokje waagt.
+1. Vul bewust een fout wachtwoord in op DVWA.
+2. Wat is de *exacte* (Engelse) foutmelding die rood op je scherm verschijnt?
+3. Kies één karakteristiek woord uit die zin. Dit wordt je `FOUTMELDING`.
+
+<details>
+<summary>Tip</summary>
+Het woord betekent "incorrect" in het Engels.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+De melding is "Username and/or password incorrect.". Het beste woord om als `FOUTMELDING` aan Hydra door te geven is: `incorrect`.
+</details>
+
+## 4. Modify & Make (Aanpassen & Maken)
+
+Nu hebben we alle puzzelstukjes verzameld om ons automatische kanon af te vuren.
+
+Kopieer het onderstaande commando naar een kladblok en vervang de 4 tijdelijke termen (`USERVELDNAAM`, `PASSWORDVELDNAAM`, `PHPSESSID` en `FOUTMELDING`) door de waardes die je in de vorige stappen hebt gevonden. Verander *niets* anders!
+
+```bash
+hydra -l admin -P /usr/share/wordlists/rockyou.txt -m '/DVWA/vulnerabilities/brute/:USERVELDNAAM=^USER^&PASSWORDVELDNAAM=^PASS^&Login=Login:H=Cookie:PHPSESSID=PHPSESSID;security=low:F=FOUTMELDING' localhost http-get-form
+```
+
+Plak jouw voltooide commando in je Kali-terminal en druk op Enter.
+
+Als het goed gaat, zie je na enkele seconden groen gekleurde tekst verschijnen met het gevonden wachtwoord!
+
+![succes](low_success.png)
+
+## 5. Er gaat iets mis...
+
+> ⚠️ **Let op:** Krijg je een gigantische lijst met honderden "gevonden" wachtwoorden? Dan is je commando niet goed! Er is maar 1 werkend wachtwoord.
+
+**Wat ging er mis?**
+Als je honderden hits krijgt (false positives), betekent dit meestal dat je `FOUTMELDING` (het woord `incorrect`) verkeerd gespeld is in je Hydra-commando. Als Hydra het woord niet herkent in de HTML-respons van de server, denkt hij vrolijk dat het inloggen bij ál die wachtwoorden gelukt is! Controleer je commando nauwkeurig.

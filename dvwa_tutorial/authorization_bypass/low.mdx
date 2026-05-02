@@ -1,0 +1,55 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Authorization Bypass — Low
+
+In deze uitdaging leren we over **Insecure Direct Object Reference (IDOR)**, oftewel: mag de ingelogde gebruiker wel zien wat hij opvraagt?
+
+## 1. Predict (Voorspel)
+
+Stel, je bent ingelogd op een app en klikt op de knop om je adresgegevens te zien. De URL ziet er zo uit:
+`https://webwinkel.nl/profiel?klant_id=4592`
+
+**Vraag:** Wat gebeurt er als je het id in de URL aanpast naar `4593` en de backend ontwikkelaar geen autorisatiecheck heeft geschreven?
+
+<details>
+<summary>Antwoord</summary>
+
+Als de backend domweg blind vertrouwt op de parameter (`klant_id=4593`), trekt hij de privégegevens van klant 4593 uit de database en laat ze aan jou zien! Dit heet Insecure Direct Object Reference, omdat je direct mag verwijzen naar objecten/data die niet van jou zijn.
+</details>
+
+## 2. Run & Investigate
+
+Start de lab-omgeving hieronder.
+
+<DvwaLab module="authorization_bypass" level="low" />
+
+Je ziet een formulier met een dropdown-menu waar je een ID kunt selecteren en bekijken.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Omdat het security level op Low staat, is er geen controle op wie jij bent ten opzichte van de opgevraagde data.
+
+Vraag een profiel op van een andere gebruiker dan jezelf.
+
+<details>
+<summary>Tip</summary>
+
+Kies simpelweg een ander persoon in de dropdown en klik op de knop.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Omdat er op de backend geen controle wordt uitgevoerd, rolt het profiel van de andere persoon direct uit de server!
+</details>
+
+## 4. Er gaat iets mis...
+
+Wat als je in de dropdown de ID waarde aanpast naar `9999` (een ID dat niet bestaat)?
+Soms crasht de hele pagina met een 500 Internal Server Error omdat de applicatie verwacht dat de opgevraagde data bestaat, en geen 'Niet Gevonden' foutafhandeling heeft geschreven. Hakken draait om grenzen opzoeken!

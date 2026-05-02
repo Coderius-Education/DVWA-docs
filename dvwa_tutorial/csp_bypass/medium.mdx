@@ -1,0 +1,57 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# CSP Bypass — Medium
+
+De ontwikkelaar snapt dat whitelisten van domeinen link is, en stapt over op een Nonce (Number Used Once).
+
+## 1. Predict (Voorspel)
+
+De CSP header is aangepast naar:
+`Content-Security-Policy: script-src 'nonce-TmV2ZXIgZ29pbmcgdG8gZ2l2ZSB5b3UgdXA='`
+
+De code op de pagina weigert ALLE scripts, ongeacht de bron, *tenzij* ze exact dat wachtwoordje (de nonce) bij zich dragen. Bijvoorbeeld:
+`<script nonce="TmV2ZXIgZ29pbmcgdG8gZ2l2ZSB5b3UgdXA="> console.log("Dit mag!"); </script>`
+
+**Vraag:** Waar is de ontwikkelaar bij de implementatie van dit (theoretisch ijzersterke) systeem gigantisch de fout in gegaan?
+
+<details>
+<summary>Antwoord</summary>
+
+De term "Nonce" staat voor "Number Used **ONCE**". Het hele idee is dat de server bij *elke* keer dat jij de pagina herlaadt, een compleet nieuw willekeurig wachtwoordje genereert.
+Deze ontwikkelaar heeft de nonce echter hardcoded (vast in de broncode) gezet! De nonce verandert nooit. Als hacker kun je simpelweg de broncode lezen, de vaste nonce kopiëren en die toevoegen aan je eigen kwaadaardige XSS payload.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="csp_bypass" level="medium" />
+
+> ⚠️ **Labbeperking:** Het inspecteren van de nonce-waarde in de broncode van een iframe is beperkt. Het lab simuleert de nonce-logica, maar voor het volledig inspecteren van HTTP-response headers heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
+
+Inspecteer de broncode van de pagina met F12. Zoek naar de `<script>` tags die door DVWA worden gebruikt en zoek naar de waarde van het `nonce` attribuut.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Breek door de CSP beveiliging door een inline script te injecteren.
+
+<details>
+<summary>Tip</summary>
+
+Kopieer de nonce-waarde die we in de Predict fase zagen (of die in de HTTP response headers / HTML staat) en voeg dit als attribuut toe aan je eigen `<script>` tag.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Vul als XSS payload het volgende in:
+`<script nonce="TmV2ZXIgZ29pbmcgdG8gZ2l2ZSB5b3UgdXA=">alert(1);</script>`
+
+De browser controleert het script, ziet dat het "wachtwoord" exact overeenkomt met de CSP header, en staat de uitvoering van je aanval braaf toe!
+</details>

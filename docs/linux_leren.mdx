@@ -1,0 +1,79 @@
+---
+sidebar_position: 1
+hide_table_of_contents: true
+displayed_sidebar: null
+---
+
+import BrowserOnly from '@docusaurus/BrowserOnly';
+import LinuxTerminal from '@site/src/components/LinuxTerminal';
+
+# Het besturingssysteem Linux leren
+
+Om te leren over cybersecurity is het belangrijk dat we eerst het besturingssysteem Linux leren.
+Waarschijnlijk ben je vooral gewend met het besturingssysteem Windows.
+
+<details>
+<summary>Waarom Linux?</summary>
+
+Bijna alle webservers en cybersecurity-tools wereldwijd draaien op Linux. Omdat we met de DVWA (Damn Vulnerable Web App) kwetsbaarheden op een server gaan onderzoeken, moeten we begrijpen hoe je via de command line (de terminal) met zo'n server praat.
+</details>
+
+## 1. Leren over Linux
+
+Je kunt kiezen uit twee routes voor het leren van Linux:
+- Via een [video (YouTube)](https://youtu.be/gd7BXuUQ91w).
+- Via het lezen en nadoen op [een interactieve website (LabEx)](https://labex.io/lesson/the-shell).
+
+*Daarnaast kun je ook naar [deze website](https://bellard.org/jslinux/vm.html?url=alpine-x86.cfg&mem=192) gaan voor een volledige virtuele Linux-omgeving in je browser.*
+
+## 2. Zelf Oefenen (Run & Investigate)
+
+Probeer de onderstaande gesimuleerde terminal in je browser. Typ `help` om de beschikbare commando's te zien.
+
+<BrowserOnly>
+{() => <LinuxTerminal />}
+</BrowserOnly>
+
+### Opdracht: De Basiscommando's
+
+Het belangrijkste doel is dat je vertrouwd raakt met de commando's die in de tutorials worden uitgelegd. Oefen deze commando's zelf in de terminal hierboven (of in je eigen WSL Linux installatie). Kun jij de volgende acties uitvoeren?
+
+**Vraag 1: Hoe laat je de bestanden in een map zien?**
+<details>
+<summary>Tip</summary>
+Het Engelse woord hiervoor is 'list'.
+</details>
+<details>
+<summary>Antwoord</summary>
+Gebruik het commando `ls` en druk op Enter.
+</details>
+
+**Vraag 2: Hoe zie je in welke map je je momenteel bevindt?**
+<details>
+<summary>Tip</summary>
+Het staat voor "Print Working Directory".
+</details>
+<details>
+<summary>Antwoord</summary>
+Gebruik het commando `pwd`.
+</details>
+
+**Vraag 3: Hoe ga je naar een andere map (bijvoorbeeld een map genaamd "docs")?**
+<details>
+<summary>Tip</summary>
+Het commando staat voor "Change Directory".
+</details>
+<details>
+<summary>Antwoord</summary>
+Typ `cd docs` en druk op Enter. Wil je weer een map omhoog/terug? Typ dan `cd ..`
+</details>
+
+**Vraag 4: Hoe toon je wie er momenteel is ingelogd?**
+<details>
+<summary>Tip</summary>
+Stel de vraag "Wie ben ik?" in het Engels aan de computer.
+</details>
+<details>
+<summary>Antwoord</summary>
+Typ `whoami` (dit commando komt later in de beveiligings-labs nog heel veel terug!). Vergeet niet je nieuwe commando's af en toe te controleren op de Cheatsheet.
+</details>

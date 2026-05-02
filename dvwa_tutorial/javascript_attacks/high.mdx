@@ -1,0 +1,54 @@
+---
+sidebar_position: 3
+sidebar_label: 'High'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# JavaScript Attacks — High
+
+Op het High niveau gebruikt de ontwikkelaar "moderne" JavaScript-trucs zoals complexe logica, scope-verdwijningen en vertragingen.
+
+## 1. Predict (Voorspel)
+
+In dit level zit de JavaScript die het token berekent diep verstopt, en het script gebruikt ingewikkelde cryptografie waarbij stappen in verschillende onvoorspelbare volgordes worden geladen.
+
+**Vraag:** Waarom zou een hacker zich eigenlijk druk maken om het helemaal ontcijferen van al die wiskundige JavaScript code? Kunnen we de browser het ingewikkelde werk niet gewoon voor ons laten doen?
+
+<details>
+<summary>Antwoord</summary>
+
+Inderdaad! We hoeven het script helemaal niet te begrijpen of na te bouwen.
+Het JavaScript bestand zit vaak vastgeknoopt aan acties op de pagina ("Event Listeners", zoals typen of klikken). Als we uitzoeken *wanneer* het script normaal gesproken getriggerd wordt om de hash te berekenen, kunnen we die actie gewoon uitvoeren. We veranderen de tekst, en de browser zorgt er dan vanzelf voor dat het ingewikkelde token netjes op de achtergrond klopt!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="javascript_attacks" level="high" />
+
+> ⚠️ **Labbeperking:** Deze aanval vereist toegang tot de **F12 Console** en **Sources** van de kwetsbare pagina. Omdat het lab in een beveiligd iframe draait, is dit beperkt mogelijk. Voor de volledige ervaring heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
+
+Probeer `success` te typen en klik op verzenden. Het mislukt.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Onderzoek de broncode of bedenk een patroon.
+
+<details>
+<summary>Tip</summary>
+
+Kijk in het tabblad Sources naar het `high.js` bestand. Je zult zien dat de cryptografie logica pas afvuurt als er op bepaalde knoppen gedrukt wordt of elementen in focus zijn.
+Als je op de pagina het woord "success" intypt... verlaat je het invoervak dan ook netjes, of druk je direct op enter?
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Deze specifieke DVWA uitdaging kent een ingewikkelde keten van JavaScript events. In theorie kun je het in de console oplossen met:
+`document.getElementById("token").value = sha256("success")` (na veel reverse engineering van hun JS-code). 
+
+Een makkelijkere manier in sommige versies: het token wordt soms geüpdatet zodra het invoerveld z'n "focus" verliest (`onblur`). Typ `success`, klik met je muis ergens buiten het vakje in het witte gebied, wacht een tel, en druk dan op Submit! Je hebt zojuist de Event Listener van JavaScript z'n werk laten doen.
+</details>

@@ -1,0 +1,59 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# XSS (Stored) — Medium
+
+De ontwikkelaar heeft gemerkt dat het "Bericht" vakje wordt misbruikt en voegt een filter toe.
+
+## 1. Predict (Voorspel)
+
+De code op de backend is deels aangepast:
+
+```php
+$message = strip_tags( addslashes( $_POST['txtMessage'] ) );
+$name = str_replace( '<script>', '', $_POST['txtName'] );
+```
+
+**Vraag:** Het bericht (message) is nu muurvast beveiligd met `strip_tags()` (haalt alle HTML weg). Maar zie je een zwakte in de beveiliging van het `$name` veld?
+
+<details>
+<summary>Antwoord</summary>
+
+De variabele `$name` wordt wél nog met XSS-kwetsbare functies behandeld! De `str_replace` haalt alleen exacte `&lt;script&gt;` tags weg. Dit lek zagen we eerder bij Reflected XSS: we kunnen dit eenvoudig omzeilen met hoofdletters of andere HTML tags!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab:
+
+<DvwaLab module="xss_stored" level="medium" />
+
+Probeer een script in te voeren in het "Name" veld (bijv. `&lt;SCRIPT&gt;alert(1)&lt;/SCRIPT&gt;`). Wat valt je op tijdens het typen?
+Je zult merken dat je niet verder kunt typen dan 10 karakters!
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+De ontwikkelaar dacht slim te zijn: "Als ik de maximale lengte van het Naam-veld in de HTML op 10 zet, kunnen ze nooit een lang hack-script intypen!" 
+Dit heet een client-side limiet (`maxlength="10"`).
+
+**Opdracht:** Breek door de `maxlength` heen en injecteer je payload via het Name veld.
+
+<details>
+<summary>Tip</summary>
+
+Client-side beveiligingen kunnen worden uitgeschakeld. Gebruik F12 (Developer Tools) om de eigenschappen van het HTML invulveld te wijzigen.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+1. Druk op F12. Inspecteer het veld "Name".
+2. Verander de code `maxlength="10"` naar `maxlength="100"`.
+3. Typ nu je XSS payload in het Name veld: `&lt;SCRIPT&gt;alert(1)&lt;/SCRIPT&gt;`.
+4. Typ een willekeurig bericht en klik Submit. Kassa!
+</details>

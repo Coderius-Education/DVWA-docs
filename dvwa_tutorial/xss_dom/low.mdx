@@ -1,0 +1,57 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# XSS (DOM) — Low
+
+Bij DOM-based XSS vindt de aanval *volledig* in de browser (via JavaScript) plaats. De server in de achtergrond doet er soms niet eens toe!
+
+## 1. Predict (Voorspel)
+
+Bij het openen van deze pagina, staat er een parameter in je URL: `?default=English`.
+De broncode van de webpagina bevat dit stukje JavaScript:
+
+```javascript
+var lang = document.location.href.substring(document.location.href.indexOf("default=") + 8);
+document.write("<option value='" + lang + "'>" + lang + "</option>");
+```
+
+**Vraag:** Wat gebeurt er als je het woord `English` in de adresbalk verandert in een stukje HTML zoals `&lt;script&gt;alert(1)&lt;/script&gt;` ?
+
+<details>
+<summary>Antwoord</summary>
+
+De JavaScript-code in je eigen browser pakt exact de letters achter `default=` uit de URL-balk en 'schrijft' dit met `document.write()` in de pagina. Jouw `&lt;script&gt;` tag wordt daardoor midden in de dropdown box opgebouwd en direct door de browser uitgevoerd!
+</details>
+
+## 2. Run & Investigate
+
+Start de testomgeving. In DVWA zie je een dropdown voor talen.
+
+<DvwaLab module="xss_dom" level="low" />
+
+De echte DOM-XSS test in DVWA speel je het makkelijkst door de URL-parameter aan te passen. Binnen deze lab-simulatie zul je het via de URL structuur van de iframe moeten doen, of conceptueel begrijpen.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Omdat de tekst klakkeloos achter `&lt;option value='` wordt geplakt in de pagina, moeten we er soms eerst voor zorgen dat we de HTML-tag 'afsluiten' voordat we onze XSS payload inbrengen.
+
+<details>
+<summary>Tip</summary>
+
+Verander de parameterwaarde in de URL (of in theorie) in: `&gt;&lt;/option&gt;&lt;script&gt;alert(1)&lt;/script&gt;`
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Door de string te beginnen met `&gt;&lt;/option&gt;` sluit je de openstaande tag van de ontwikkelaar netjes af. Daarna kun je je eigen `&lt;script&gt;` openen. DOM-XSS vereist vaak een stukje "HTML-puzzelen" om de structuur weer heel te maken!
+</details>
+
+## 4. Er gaat iets mis...
+
+Je typt keurig je JavaScript-payload en... er gebeurt niets. Vaak blokkeren moderne webbrowsers `document.write()` als ze merken dat er plots een script uit het niets wordt geschreven. Dit is een ingebouwde browserbeveiliging. Hacken met DOM XSS is in moderne browsers extreem lastig geworden zonder complexe *bypasses*!

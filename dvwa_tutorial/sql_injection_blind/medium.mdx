@@ -1,0 +1,45 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# SQL Injection (Blind) — Medium
+
+Op het Medium level is het formulier weer veranderd naar een dropdown-menu, én ontbreken de aanhalingstekens in de query, net als bij de gewone SQL Injection.
+
+## 1. Predict (Voorspel)
+
+We weten nu hoe een Ja/Nee (Boolean) injectie werkt. Soms vertelt de applicatie je echter niet eens "Exists" of "Missing", maar gebeurt er in beide gevallen op de pagina *exact hetzelfde*. Hoe kunnen we dán Yes/No vragen stellen aan de server?
+
+<details>
+<summary>Antwoord</summary>
+
+We kunnen overstappen op **Time-Based Blind SQL Injection**. 
+We commanderen de database om, *alleen* als onze bewering waar is, 5 seconden te gaan wachten voordat hij antwoord geeft. Als we direct antwoord krijgen, was de bewering blijkbaar onwaar. Als het verzoek lang duurt, weten we dat de bewering waar was!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. Je ziet de vertrouwde dropdown-box (waar je niet vrij in kunt typen).
+
+<DvwaLab module="sql_injection_blind" level="medium" />
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Omdat de backend `user_id = $id` verwerkt (zonder aanhalingstekens), kunnen we een wiskundige Time-Based aanval toevoegen via de Developer Tools of je browser.
+
+<details>
+<summary>Tip</summary>
+
+Druk op F12. Inspecteer het formulier, en verander de `value="1"` van een van de opties. Gebruik het SQL commando `SLEEP(5)` of soortgelijke vertragings-commando's afhankelijk van de database.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Verander de optie naar: `<option value="1 AND SLEEP(5)">`
+Selecteer deze in de webpagina en klik Submit. De browser wacht nu 5 volle seconden voordat de webpagina weer verschijnt! Je hebt succesvol de wachttijd gemanipuleerd en daarmee bewijs geleverd dat er een blind gat in de database zit.
+</details>

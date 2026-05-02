@@ -1,0 +1,45 @@
+---
+sidebar_position: 4
+sidebar_label: 'Impossible'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# CSRF — Impossible
+
+Naast tokens, hoe kunnen we de functionaliteit om een wachtwoord te wijzigen 100% hufterproof maken?
+
+## 1. Predict (Voorspel)
+
+De ontwerper van de applicatie heeft goed nagedacht en de logica van de interface zélf gewijzigd. Je mag niet zomaar een nieuw wachtwoord invullen.
+
+```html
+Oud wachtwoord: <input type="password" name="password_current">
+Nieuw wachtwoord: <input type="password" name="password_new">
+Bevestig nieuw wachtwoord: <input type="password" name="password_conf">
+```
+
+**Vraag:** Waarom maakt het veld `Oud wachtwoord` een CSRF aanval absoluut kansloos (zelfs zonder het gebruik van complexe tokens)?
+
+<details>
+<summary>Antwoord</summary>
+
+Bij een CSRF aanval proberen we het slachtoffer via een linkje onbewust de server te laten vertellen: "Zet mijn wachtwoord op X".
+Maar omdat de server nu eist dat het *huidige* wachtwoord óók wordt meegestuurd in dat linkje, is de hacker schaakmat! De hacker wéét het huidige wachtwoord immers niet. Een blind linkje zoals `?password_current=RAADMAAR&password_new=hacked` zal daarom altijd genadeloos afgewezen worden door de server.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. 
+
+<DvwaLab module="csrf" level="impossible" />
+
+Probeer je wachtwoord te wijzigen en merk op dat de workflow daadwerkelijk is veranderd.
+
+## Wat heb je geleerd?
+
+- **CSRF is een blinde aanval:** De hacker dwingt een ingelogde browser om ongemerkt een request te sturen namens het slachtoffer.
+- **Referers checken is zwak:** Beveiligingen op basis van de HTTP-referer zijn vaak te omzeilen.
+- **Anti-CSRF tokens zijn noodzaak:** Bijna elk modern web-framework (Laravel, Django, React) voegt automatisch onkraakbare, onzichtbare tokens toe aan formulieren om CSRF onmogelijk te maken.
+- **Vraag om bevestiging:** Het beste middel tegen acties-zonder-toestemming is het eisen van verificatie (bijv. "Typ eerst je huidige wachtwoord in").
