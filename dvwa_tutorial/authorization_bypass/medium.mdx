@@ -1,69 +1,50 @@
 ---
 sidebar_position: 2
-sidebar_label: 'Medium en High'
-doc_id: dvwa_tutorial/authorization_bypass/medium
+sidebar_label: 'Medium'
+hide_table_of_contents: true
 ---
 
-# Medium en High
-Start `DVWA` en ga naar de challenge `Authorization bypass`. Zorg dat je `DVWA Security` op `medium` hebt staan.
-Ben je vergeten hoe dit moet? Ga dan naar de [cheatsheet](../../docs/cheatsheet).
+import DvwaLab from '@site/src/components/DvwaLab';
 
-Laten we eerst `Network Tools` in je browser eens wat beter bekijken:
+# Authorization Bypass — Medium
 
-<iframe width="920" height="517" src="https://www.youtube.com/embed/e1gAyQuIFQo" title="Inspect Network Activity - Chrome DevTools 101" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+De webontwikkelaar probeert dit lek te verbergen door de opties in het keuzemenu te verwijderen.
 
-## Het probleem snappen
-- Log op DVWA in met gebruikersnaam `gordonb` en wachtwoord `abc123`
-- Ga in je browser naar `http://localhost/DVWA/vulnerabilities/authbypass/`
-- Welke foutmelding zie je bij `Network activity` (zie video hierboven)?
+## 1. Predict (Voorspel)
 
-## Voorkennis
-Om deze opdracht te kunnen voltooien, heb je wat voorkennis nodig:
-- **Het dataformaat JSON** (JavaScript Object Notation): Een formaat dat veel wordt gebruikt voor het uitwisselen van informatie tussen digitale systemen
-Bekijk dit filmpje om te leren hoe dit formaat werkt:
+De ontwikkelaar past de website (de frontend) aan:
+"Als ik er gewoon voor zorg dat de gebruiker in het dropdown-menu alleen maar zijn *eigen* naam kan selecteren, kan hij nooit de ID's van anderen opvragen!"
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/cj3h3Fb10QY?si=Z-dwudhjEVD9VcEb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+**Vraag:** Heeft de ontwikkelaar hiermee de *Insecure Direct Object Reference* (IDOR) kwetsbaarheid verholpen?
 
-- **De basis van het HTTP protocol**, en dan met name de GET en POST methods, en hoe je met een POST data naar een website kunt versturen
-Bekijk dit filmpje om te leren over HTTP GET en POST:
+<details>
+<summary>Antwoord</summary>
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/tkfVQK6UxDI?si=A3hcptGkAyD2gOIw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+Nee! Het verwijderen van opties op je beeldscherm is slechts een optische verandering ("Security by Obscurity"). Een browser staat volledig onder controle van de gebruiker. Een hacker kan via de F12 Developer Tools zélf andere opties toevoegen of formulier-waardes aanpassen voordat ze naar de server verstuurd worden.
+Als de server het daarna klakkeloos goedkeurt, is het lek nog altijd aanwezig.
+</details>
 
-- **De command-line "browser" cURL**: hiermee kun je via de command line een URL opvragen, maar ook een POST sturen. Vanuit de 'developer tools' kun je
-een netwerk request met Copy As cURL kopiëren en daarna in je bash shell gebruiken en aanpassen:
+## 2. Run & Investigate
 
-![Copy as cURL command](copy-as-curl.png)
+Start het lab.
 
-Dit filmpje laat zien hoe je met cURL een POST request kunt maken:
+<DvwaLab module="authorization_bypass" level="medium" />
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/nApQ6qN4jzs?si=4E89GaOpHwbw9A6E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+Bekijk de dropdown. Inderdaad, je kunt nu alleen je eigen profiel nog selecteren. Druk op F12 (Developer Tools) en inspecteer het dropdown menu. 
 
-Hierna kun je verder met de opdracht.
+## 3. Modify & Make (Aanpassen & Maken)
 
-## De opdracht
-Probeer de foutmelding die je kreeg bij 'Het probleem snappen' te omzeilen. De bedoeling is om met een 'gewone' gebruiker die
-geen `admin` rechten heeft toch de gegevens van andere gebruikers aan te passen. Door een fout in de DVWA website is dit nog steeds mogelijk.
+Je opdracht: vraag alsnog het profiel van iemand anders (bijvoorbeeld admin/ID 1) op.
 
-De fout zit hem in deze 2 pagina's van de DVWA web applicatie:
+<details>
+<summary>Tip</summary>
 
-```
-vulnerabilities/authbypass/get_user_data.php 
-vulnerabilities/authbypass/change_user_details.php
-```
+Verander in de Developer Tools de `value` van jouw enige optie in de lijst.
+</details>
 
-- Bekijk deze pagina's eens in je webbrowser.
-- Bij de eerste pagina zal je de user-data zien in een formaat dat je misschien bekend voorkomt
-- Bij de tweede pagina is het mogelijk om diezelfde data terug te sturen en zo de gebruikersgegevens aan te passen.
+<details>
+<summary>Antwoord</summary>
 
-Probeer met cURL de `change_user_details.php` pagina zo aan te roepen dat je de gegevens van een andere gebruiker aanpast.
-(Bijvoorbeeld de achternaam). Als basis gebruik je het cURL commando die je met `copy as cURL` hebt gemaakt.
-Om er een POST van de maken met JSON data, heb je 2 extra parameters nodig:
-
-`-X POST`: Om een POST request te maken<br/>
-`-d '{}'`: Om data (in dit geval in JSON formaat) te sturen naar de pagina.
-
-Als het is gelukt, krijg je van de change_user_details pagina het volgende terug:
-
-```
-{"result": "ok"}
-```
+Zoek in de F12 Inspector naar: `<option value="...">...`. Verander de `value` naar `1` en druk op Enter. Klik nu in de normale webpagina op Submit.
+Je browser stuurt nu het valse ID naar de server. Omdat er op de backend nog altijd geen controle zit, zie je gewoon de gegevens!
+</details>

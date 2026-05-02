@@ -1,0 +1,68 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Weak Session IDs — Low
+
+Wanneer je inlogt op een website, krijg je van de webserver een uniek bewijsje (een "Sessie ID") opgeslagen in een Cookie. Zolang je dit bewijsje meestuurt bij elke klik, weet de server wie je bent. Maar wat als de server dat bewijsje op een luie, voorspelbare manier maakt?
+
+## 1. Predict (Voorspel)
+
+De server gebruikt de volgende code om bij elke login een nieuw sessie-ID te genereren en in een cookie te stoppen:
+
+```php
+if (!isset ($_SESSION['last_session_id'])) {
+    $_SESSION['last_session_id'] = 0;
+}
+$_SESSION['last_session_id']++; // Verhoog de teller met 1
+
+$cookie_value = $_SESSION['last_session_id'];
+setcookie("dvwaSession", $cookie_value);
+```
+
+**Vraag:** Waarom is het een verschrikkelijk slecht idee om een sessie-id domweg een oplopend getal (1, 2, 3...) te maken?
+
+<details>
+<summary>Antwoord</summary>
+
+Als jouw cookie-waarde vandaag `dvwaSession=12` is, betekent dit hoogstwaarschijnlijk dat de vorige persoon die vandaag heeft ingelogd sessie `11` kreeg, en degene na jou krijgt sessie `13`.
+Een hacker kan simpelweg de waarde in zijn eigen cookie aanpassen naar `11`, op F5 (vernieuwen) drukken, en de server zal hem onmiddellijk aanzien voor de andere persoon die op dat moment was ingelogd!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. 
+
+<DvwaLab module="weak_session_ids" level="low" />
+
+> ⚠️ **Labbeperking:** Het aanpassen van cookies via de **F12 Developer Tools** werkt in het lab beperkt, omdat het lab in een beveiligd iframe draait. Je kunt de gegenereerde sessie-ID's wél observeren, maar voor het daadwerkelijk kapen van een sessie heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
+
+Klik in het lab een paar keer op de knop om een nieuwe sessie op te vragen. Let op de waarde die wordt getoond.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Omdat het sessie-ID (de cookie) een simpele waarde als `1`, `2`, of `3` is, gaan we deze cookie stelen en aanpassen.
+
+<details>
+<summary>Tip</summary>
+
+Druk op F12 (Developer Tools) en zoek de sectie op waar je cookies kunt inzien en wijzigen. Dit staat vaak onder "Application" of "Storage".
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+1. Ga in Developer Tools naar `Application` -> `Cookies`.
+2. Zoek de cookie met de naam `dvwaSession`.
+3. Verander de waarde van `3` in `1` of `2`.
+4. Vernieuw de pagina. Gefeliciteerd, je hebt nu de sessie "gekaapt" (Session Hijacking) van de gebruiker met dat ID!
+</details>
+
+## 4. Er gaat iets mis...
+
+Je past je cookie aan naar ID `999` en ververst de pagina. Ineens logt het systeem je uit. Waarom?
+Omdat gebruiker 999 waarschijnlijk nog niet is ingelogd op deze testserver (of omdat de sessie al is verlopen). De server ziet het bewijsje `999`, zoekt het op in zijn lijst, ziet geen overeenkomst, en vernietigt de sessie. Een Session Hijacking aanval werkt alleen op actieve, geldige sessies die momenteel op de webserver geregistreerd staan!

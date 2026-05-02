@@ -1,29 +1,55 @@
 ---
 sidebar_position: 1
 sidebar_label: 'Low'
-doc_id: dvwa_tutorial/authorization_bypass/low
+hide_table_of_contents: true
 ---
 
-# Low
-Start `DVWA` en ga naar de challenge `Authorization bypass`. Zorg dat je `DVWA Security` op `low` hebt staan.
-Ben je vergeten hoe dit moet? Ga dan naar de [cheatsheet](../../docs/cheatsheet).
+import DvwaLab from '@site/src/components/DvwaLab';
 
-Voordat we kunnen beginnen, moeten we ons verdiepen in hoe een gebruiker bij pagina's kan komen waarvoor hij eigenlijk geen rechten heeft:
+# Authorization Bypass — Low
 
-<iframe width="920" height="517" src="https://www.youtube.com/embed/K2PiHznrPBs?start=413" title="2021 OWASP Top Ten: Broken Access Control" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+In deze uitdaging leren we over **Insecure Direct Object Reference (IDOR)**, oftewel: mag de ingelogde gebruiker wel zien wat hij opvraagt?
 
-## De opdracht
+## 1. Predict (Voorspel)
 
-1. De pagina die je ziet in DVWA bevat een `User Manager`. Je kunt hier de gegevens van alle gebruikers in de database aanpassen.
-2. Klik op `Logout` in het menu van DVWA
-3. Log nu in met de gebruiker `gordonb` en het wachtwoord `abc123`.
-4. De challenge "Authorization Bypass" is nu uit het menu verdwenen, omdat je geen beheerder (admin) meer bent. Kun je deze `User Manager` toch benaderen nu je als `gordonb` bent ingelogd?
+Stel, je bent ingelogd op een app en klikt op de knop om je adresgegevens te zien. De URL ziet er zo uit:
+`https://webwinkel.nl/profiel?klant_id=4592`
 
-Hint: kijk eens goed naar de URL als je met `admin` bent ingelogd.
+**Vraag:** Wat gebeurt er als je het id in de URL aanpast naar `4593` en de backend ontwikkelaar geen autorisatiecheck heeft geschreven?
 
-Het resultaat van een succesvolle poging zie je hieronder:
+<details>
+<summary>Antwoord</summary>
 
-![succes](low_succes.png)
+Als de backend domweg blind vertrouwt op de parameter (`klant_id=4593`), trekt hij de privégegevens van klant 4593 uit de database en laat ze aan jou zien! Dit heet Insecure Direct Object Reference, omdat je direct mag verwijzen naar objecten/data die niet van jou zijn.
+</details>
 
-## De walkthrough
-<iframe width="920" height="517" src="https://www.youtube.com/embed/Qcgu34eWQa4?list=PLHUKi1UlEgOJLPSFZaFKMoexpM6qhOb4Q" title="15 - Authorisation Bypass (low/med/high) - Damn Vulnerable Web Application (DVWA)" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+## 2. Run & Investigate
+
+Start de lab-omgeving hieronder.
+
+<DvwaLab module="authorization_bypass" level="low" />
+
+Je ziet een formulier met een dropdown-menu waar je een ID kunt selecteren en bekijken.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Omdat het security level op Low staat, is er geen controle op wie jij bent ten opzichte van de opgevraagde data.
+
+Vraag een profiel op van een andere gebruiker dan jezelf.
+
+<details>
+<summary>Tip</summary>
+
+Kies simpelweg een ander persoon in de dropdown en klik op de knop.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Omdat er op de backend geen controle wordt uitgevoerd, rolt het profiel van de andere persoon direct uit de server!
+</details>
+
+## 4. Er gaat iets mis...
+
+Wat als je in de dropdown de ID waarde aanpast naar `9999` (een ID dat niet bestaat)?
+Soms crasht de hele pagina met een 500 Internal Server Error omdat de applicatie verwacht dat de opgevraagde data bestaat, en geen 'Niet Gevonden' foutafhandeling heeft geschreven. Hakken draait om grenzen opzoeken!

@@ -1,0 +1,50 @@
+---
+sidebar_position: 4
+sidebar_label: 'Impossible'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# JavaScript Attacks — Impossible
+
+Hoe beveilig je een systeem dan wel tegen mensen die klungelen in je F12 Developer Tools?
+
+## 1. Predict (Voorspel)
+
+Heel simpel: verplaats alle hersens en complexe beslissingen van de voorkant (JavaScript) naar de achterkant (Backend/PHP).
+
+De PHP-code op de backend ziet er nu zo uit:
+```php
+$word = $_POST['phrase'];
+
+if ($word === 'success') {
+    // Top, gelukt!
+} else {
+    // Fout!
+}
+```
+
+**Vraag:** Waar zijn de ingewikkelde tokens, vercijferingen en geheime JavaScript functies gebleven? Waarom is deze belachelijk simpele code veel veiliger dan de High-versie?
+
+<details>
+<summary>Antwoord</summary>
+
+Ze zijn compleet verwijderd, omdat ze zinloos waren! 
+Er is geen enkele logische reden om een browser een moeilijk, geheim wiskundig trucje te laten doen om een wachtwoord of woordje te 'verstoppen' als de gebruiker toch zélf controle over zijn browser heeft.
+In de Impossible versie vraagt de backend gewoon domweg: "Klopt het woordje in de POST request?" Geen poespas, en daardoor ook geen JavaScript om te manipuleren. Dit is de ultieme veiligheid.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="javascript_attacks" level="impossible" />
+
+Kijk in je Developer Tools. Je zult zien dat het bestandje `impossible.js` waarschijnlijk niet eens bestaat, of helemaal niets spannends doet!
+
+## Wat heb je geleerd?
+
+- **Never Trust The Client:** Alles wat in HTML, CSS of JavaScript staat, draait op de computer van de bezoeker. Jij als programmeur hebt er nul controle over.
+- **Security by Obscurity is een leugen:** Minified of ge-obfusceerde JavaScript code houdt een goede hacker hooguit 10 minuten bezig. Het is geen echte beveiliging.
+- **Houd logica op de server:** Zaken zoals autorisatie, prijzen in een webshop of berekeningen van wachtwoorden móéten in veilige backend code (PHP, Java, Node.js) worden uitgevoerd, nooit lokaal.

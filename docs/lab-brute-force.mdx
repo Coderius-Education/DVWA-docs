@@ -10,60 +10,117 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 In dit interactieve lab oefen je met brute force aanvallen op een inlogsysteem. Het lab draait volledig in je browser.
 
-## Wat is brute force?
+<details>
+<summary>Diepgaande theorie (optioneel): Wat is brute force precies?</summary>
 
-Bij een brute force aanval probeert een aanvaller systematisch alle mogelijke wachtwoorden uit totdat het juiste wachtwoord gevonden is. Dit is een van de eenvoudigste maar ook meest voorkomende aanvalsmethoden.
+Bij een brute force aanval probeert een aanvaller (of een automatisch script) simpelweg alle mogelijke combinaties van gebruikersnamen en wachtwoorden uit totdat de juiste is gevonden. Het is een botte-bijl-methode, maar omdat computers enorm snel duizenden pogingen per seconde kunnen doen, is het een van de meest voorkomende en gevaarlijke aanvallen op slecht beveiligde inlogsystemen.
+</details>
 
-## Het lab
+## 1. Predict (Voorspel)
+
+Bekijk eens het onderstaande (vereenvoudigde) stukje PHP code dat de server uitvoert na een mislukte inlogpoging:
+
+```php
+if ( $result->num_rows == 0 ) {
+    // Inloggen mislukt
+    sleep( 2 );
+    echo "Gebruikersnaam en/of wachtwoord onjuist.";
+}
+```
+
+**Vraag:** Wat doet de regel `sleep( 2 );` en welk effect heeft dit op een aanvaller die een script gebruikt om 10.000 wachtwoorden te proberen?
+
+<details>
+<summary>Antwoord</summary>
+
+De functie `sleep( 2 );` laat de server letterlijk 2 seconden pauzeren (wachten) voordat het antwoord wordt teruggestuurd naar de gebruiker.
+Voor een menselijke gebruiker voelt het inloggen gewoon iets trager aan. Maar voor een hacker die 10.000 wachtwoorden wil testen, betekent dit dat de aanval opeens 20.000 seconden (ruim 5,5 uur) gaat duren! Dit vertraagt een geautomatiseerde aanval enorm.
+</details>
+
+## 2. Run (Uitvoeren)
+
+Tijd om zelf in te breken. Hier is de lab-omgeving:
 
 <BrowserOnly>
 {() => <DvwaLab module="brute_force" />}
 </BrowserOnly>
 
-## Opdrachten
+### Opdracht 1: Low Security — Basis
 
-### Opdracht 1: Low Security
-
-1. Start het lab op **Low** niveau
-2. Probeer in te loggen met standaard gebruikersnamen en wachtwoorden
-3. Bekijk de broncode — wat valt je op aan de beveiliging?
+1. Start het lab op **Low** niveau.
+2. Je ziet een standaard inlogscherm. Jouw doel is om in te loggen.
 
 <details>
-<summary>Hint</summary>
+<summary>Tip</summary>
 
-Probeer veelgebruikte combinaties zoals `admin` / `password` of `admin` / `admin`. Op het lage niveau is er geen bescherming tegen meerdere pogingen.
-
+Hackers proberen eerst altijd de meest voor de hand liggende combinaties. Heb je `admin` als gebruikersnaam al geprobeerd? Welk wachtwoord zou hier vaak bij horen?
 </details>
-
-### Opdracht 2: Medium Security
-
-1. Schakel naar **Medium** niveau
-2. Wat is er veranderd ten opzichte van Low?
-3. Is de beveiliging nu voldoende?
 
 <details>
-<summary>Hint</summary>
+<summary>Antwoord</summary>
 
-Op medium niveau is er een vertraging na een mislukte poging. Dit maakt brute force langzamer, maar niet onmogelijk. Een echte aanvaller zou gewoon langer wachten.
-
+Probeer in te loggen met de gebruikersnaam `admin` en het wachtwoord `password`. Dit is een klassieke standaard-combinatie die verrassend vaak nog werkt op systemen die net geïnstalleerd zijn.
 </details>
 
-### Opdracht 3: High Security
+## 3. Investigate (Onderzoeken)
 
-1. Schakel naar **High** niveau
-2. Welke extra beveiliging is toegevoegd?
-3. Kun je nog steeds inloggen zonder het wachtwoord te weten?
+### Opdracht 2: Medium Security — Vertraging
+
+1. Schakel het lab naar **Medium** niveau en start het.
+2. Probeer met een opzettelijk *fout* wachtwoord in te loggen. Wat merk je op?
+3. Bekijk de broncode (klik op "Bekijk broncode"). Is dit inlogsysteem nu 100% veilig?
 
 <details>
-<summary>Hint</summary>
+<summary>Tip</summary>
 
-Op het hoge niveau wordt een CSRF-token gebruikt. Elke poging heeft een uniek token nodig, waardoor geautomatiseerde aanvallen veel moeilijker worden.
-
+Denk terug aan de `Predict` vraag aan het begin van deze pagina.
 </details>
+
+<details>
+<summary>Antwoord</summary>
+
+Op Medium niveau is er een `sleep(2)` vertraging na een mislukte poging toegevoegd (een *Rate Limit* of *Throttling*). Het inlogsysteem is hierdoor niet 100% veilig, want een aanvaller kan er alsnog in komen. De aanval duurt alleen veel langer.
+</details>
+
+### Opdracht 3: High Security — Extra Beveiligingslaag
+
+1. Schakel naar **High** niveau.
+2. Bekijk de broncode zorgvuldig. Er is iets toegevoegd om geautomatiseerde inlogpogingen nog verder tegen te werken, bovenop de sleep timer. Welke nieuwe variabele wordt er bijgehouden?
+
+<details>
+<summary>Tip</summary>
+
+Zoek in de broncode naar iets dat heet `user_token`. 
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Er wordt een **CSRF-token** (`user_token`) gebruikt. Dit is een verborgen, unieke en willekeurige code die bij het laden van het inlogscherm wordt gegenereerd. Als je het formulier opstuurt, moet deze code kloppen met wat de server verwacht.
+Een simpel hack-script dat alleen maar een lijst met wachtwoorden opstuurt, snapt dit token niet en wordt daardoor direct geblokkeerd!
+</details>
+
+## 4. Modify & Make (Aanpassen & Maken)
+
+Omdat het programmeren van een eigen brute-force script (dat CSRF tokens automatisch kan overnemen) te ver gaat voor dit lab, is de opdracht als volgt: 
+
+Kun je op het **High** niveau handmatig (als mens) inloggen met `admin` en `password`?
+Probeer dit en merk op dat de website voor jou als normale gebruiker gewoon werkt, terwijl scripts door de tokens in de war raken. Jouw browser pikt de verborgen tokens (zoals `user_token`) namelijk automatisch op in de achtergrond!
+
+## 5. Er gaat iets mis...
+
+Je hebt een beveiliging gebouwd op je website, maar nu klagen gebruikers opeens dat ze **elke dag buitengesloten** raken uit hun accounts met de melding: *"Dit account is tijdelijk geblokkeerd"*, zélfs als ze het juiste wachtwoord typen!
+
+**Wat is er aan de hand?**
+De beste bescherming tegen brute-force is een **Account Lockout Policy** (het account blokkeren na bijvoorbeeld 5 foute pogingen).
+Het grote nadeel hiervan is dat pestkoppen of aanvallers dit kunnen misbruiken: ze vullen simpelweg met opzet 5 keer een verkeerd wachtwoord in bij de accountnaam van de docent of klasgenoot. Het systeem vergrendelt braaf de account, waardoor de échte eigenaar er niet meer in kan.
+Dit noem je een *Denial of Service* (DoS) via de lockout policy. 
+
+Daarom combineren grote websites tegenwoordig slimme captcha's (zoals "Klik op alle stoplichten") met throttling, in plaats van accounts direct muurvast te zetten.
 
 ## Wat heb je geleerd?
 
-- Brute force is een eenvoudige maar effectieve aanvalsmethode
-- Vertragingen maken brute force langzamer, maar stoppen het niet
-- CSRF-tokens en account lockouts zijn effectievere beveiligingen
-- **Sterke wachtwoorden** zijn de beste verdediging
+- **Brute force** is een simpele maar effectieve aanval als gebruikers zwakke wachtwoorden kiezen.
+- Een **vertraging (Rate Limiting/Throttling)** vertraagt hackers aanzienlijk, maar stopt ze niet definitief.
+- **CSRF-tokens** maken het schrijven van simpele hack-scripts een stuk moeilijker.
+- Een **Account Lockout** mechanisme na foute pogingen werkt goed, maar kan misbruikt worden om onschuldige gebruikers buiten te sluiten.

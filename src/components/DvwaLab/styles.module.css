@@ -126,7 +126,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error state */
@@ -145,21 +147,6 @@
   max-height: 400px;
   overflow: auto;
   border-bottom: 1px solid var(--ifm-color-emphasis-300);
-}
-
-.sourceCode pre {
-  margin: 0;
-  padding: 1rem;
-  background: #1e1e2e;
-  color: #cdd6f4;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  border-radius: 0;
-}
-
-.sourceCode code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  white-space: pre;
 }
 
 /* Iframe output */

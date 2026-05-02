@@ -3,6 +3,8 @@
 
 # Production
 /build
+CLAUDE.md 
+GEMINI.md
 
 # Generated files
 .docusaurus

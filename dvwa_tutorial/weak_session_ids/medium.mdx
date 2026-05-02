@@ -1,0 +1,53 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Weak Session IDs — Medium
+
+De oplopende getallen (1, 2, 3) waren te makkelijk te raden. Tijd voor willekeur.
+
+## 1. Predict (Voorspel)
+
+De backend code gebruikt nu de ingebouwde `time()` functie van PHP om een sessie ID te maken:
+
+```php
+$cookie_value = time();
+setcookie("dvwaSession", $cookie_value);
+```
+
+**Vraag:** De functie `time()` genereert de zogeheten UNIX Epoch Time (het aantal seconden sinds 1 januari 1970). Deze getallen lijken heel willekeurig, zoals: `1714571020`. Maar is dit eigenlijk wel zo willekeurig (random)?
+
+<details>
+<summary>Antwoord</summary>
+
+Absoluut niet! Er zit niets willekeurigs aan de huidige datum. De nummers tellen netjes per seconde verder. Als je weet dat je docent om 10:15 is ingelogd, hoef je alleen het UNIX-timestamp van 10:15 (plus of min een paar seconden) op te zoeken op Google. Als je deze berekende timestamp instelt als jouw eigen cookie, steel je onmiddellijk zijn sessie!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="weak_session_ids" level="medium" />
+
+Klik op de knop om een sessie te genereren. Je zult een enorm lang nummer zien. Wacht een paar seconden en druk nog eens op de knop. Je zult zien dat de laatste cijfers voorspelbaar met een paar seconden zijn verhoogd.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Is er een snelle manier om te achterhalen wanneer een specifieke cookie precies is gemaakt, zodat je in de "buurt" kan zoeken naar andermans sessie?
+
+<details>
+<summary>Tip</summary>
+
+Kopieer het gegenereerde lange nummer, en zoek op Google naar een "Epoch Time Converter".
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Als je het getal plakt in een Epoch Converter (zoals `epochconverter.com`), toont hij exact tot op de seconde nauwkeurig de huidige datum en tijd.
+Als hacker genereer je een tool (bijv. een Python-script) die razendsnel alle cookies voor de afgelopen 60 seconden (`timestamp - 1`, `timestamp - 2`, etc) probeert, en kijkt of je plotseling als admin bent ingelogd!
+</details>

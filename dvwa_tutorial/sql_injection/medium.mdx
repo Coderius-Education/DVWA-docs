@@ -1,0 +1,61 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# SQL Injection — Medium
+
+De ontwikkelaar probeert ons in de weg te zitten door het tekstvak te veranderen in een vast dropdown-menu en beveiligingsfuncties toe te voegen.
+
+## 1. Predict (Voorspel)
+
+De code is aangepast. De input wordt nu beveiligd met `mysqli_real_escape_string()`, een functie die aanhalingstekens onschadelijk maakt. Bovendien ziet de query er nu zo uit:
+
+```php
+$id = $_POST[ 'id' ];
+$id = mysqli_real_escape_string($GLOBALS["___mysqli_ston"], $id);
+$query  = "SELECT first_name, last_name FROM users WHERE user_id = $id;";
+```
+
+**Vraag:** Zie je een foutje in deze PHP code vergeleken met het *Low* level? Is de `escape` functie hier wel nuttig?
+
+<details>
+<summary>Antwoord</summary>
+
+Kijk naar de variabele `$id` aan het einde van de query: hij staat **niet** meer tussen enkele aanhalingstekens! 
+Omdat er geen aanhalingstekens staan, hoeven we ook geen aanhalingstekens te gebruiken om uit te breken. En omdat we geen aanhalingstekens gebruiken, doet de `escape` functie helemaal niets!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. Je zult zien dat je geen tekst meer kunt intypen, alleen nog maar een ID kunt kiezen uit een dropdown. 
+
+<DvwaLab module="sql_injection" level="medium" />
+
+Hoe kunnen we tekst naar de server sturen als er geen tekstvak is?
+Gebruik de Developer Tools (F12) om het dropdown-menu (`<select>`) te inspecteren.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Jouw doel is opnieuw om alle gebruikers uit de database te trekken. 
+
+<details>
+<summary>Tip</summary>
+
+Pas de `value` van één van de `<option>` elementen in de HTML aan met F12. Vul hier je SQL Injection in. Omdat je in deze query géén aanhalingstekens hoeft te gebruiken, kun je simpelweg een wiskundige OR-statement toevoegen.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Verander in F12 de HTML naar: `<option value="1 OR 1=1">1</option>`. 
+Selecteer deze optie in de browser en klik op Submit. De database leest: `WHERE user_id = 1 OR 1=1`. Omdat `1=1` altijd waar is, krijg je alle gebruikers!
+</details>
+
+## 4. Er gaat iets mis...
+
+Wat als je in F12 typt: `<option value="1 OR 1=1">1 OR 1=1</option>` en je ziet ineens een lege pagina of de request mislukt? 
+Soms verwacht het web-framework dat parameters van een dropdown een strikt type hebben. Hoewel je de zichtbare tekst (tussen de tags) kunt veranderen, is het áltijd de `value="..."` (het attribuut) dat naar de server wordt verstuurd! Zorg dus dat je het juiste aanpast.

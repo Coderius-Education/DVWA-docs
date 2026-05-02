@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import CodeBlock from '@theme/CodeBlock';
 import styles from './styles.module.css';
 import { bruteForce } from './modules/brute_force';
 import { commandInjection } from './modules/command_injection';
@@ -347,7 +348,7 @@ ${htmlOutput}
 
       {isStarted && !isLoading && showSource && (
         <div className={styles.sourceCode}>
-          <pre><code>{config.php}</code></pre>
+          <CodeBlock language="php" showLineNumbers>{config.php}</CodeBlock>
         </div>
       )}
 

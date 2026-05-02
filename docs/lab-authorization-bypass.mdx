@@ -8,51 +8,108 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 # Lab: Authorization Bypass
 
-In dit lab leer je over authorization bypass — het omzeilen van toegangscontroles om bij informatie te komen waar je geen recht op hebt.
+In dit lab leer je over **authorization bypass** (of *Insecure Direct Object Reference* - IDOR). Dit is het omzeilen van toegangscontroles om bij informatie te komen waar je geen recht op hebt.
 
-## Wat is authorization bypass?
+<details>
+<summary>Diepgaande theorie (optioneel): Wat is authorization bypass precies?</summary>
 
-Authorization (autorisatie) bepaalt wat een ingelogde gebruiker mag doen. Bij een authorization bypass kan een gebruiker acties uitvoeren of data bekijken waarvoor ze geen toestemming hebben.
+Authentication (authenticatie) controleert *wie* je bent (bijv. inloggen met wachtwoord).
+Authorization (autorisatie) bepaalt *wat* je mag doen (ben je een admin? Mag je dit dossier inzien?).
+Bij een authorization bypass is de programmeur vergeten te checken of de ingelogde gebruiker wel het recht heeft om een specifieke actie uit te voeren. Vaak gebeurt dit doordat de applicatie blind vertrouwt op een meegestuurd ID-nummer (bijv. `?user_id=5`).
+</details>
 
-## Het lab
+## 1. Predict (Voorspel)
+
+Stel, je bent ingelogd op je school-portaal en je klikt op je eigen cijferlijst. De URL in je browser verandert naar:
+`https://school.nl/cijfers.php?student_id=105`
+
+**Vraag:** Wat zou er kunnen gebeuren als je dat getal `105` in de URL handmatig verandert naar `106` en op Enter drukt?
+
+<details>
+<summary>Antwoord</summary>
+
+Als de webserver niet goed controleert of jij wel echt student 106 bent (of leraar/admin bent), zal de server simpelweg de cijferlijst van student 106 aan je laten zien. Dit heet een **Insecure Direct Object Reference (IDOR)**.
+</details>
+
+## 2. Run (Uitvoeren)
+
+Tijd om dit zelf te proberen in de lab-omgeving:
 
 <BrowserOnly>
 {() => <DvwaLab module="authorization_bypass" />}
 </BrowserOnly>
 
-## Opdrachten
-
 ### Opdracht 1: Low Security — Direct Object Reference
 
-1. Start het lab op **Low** niveau
-2. Je bent ingelogd als een gewone gebruiker
-3. Bekijk de URL of parameters goed — zie je een gebruikers-ID?
-4. Wat gebeurt er als je dat ID verandert?
+1. Start het lab op **Low** niveau.
+2. Je ziet een knop om je eigen profiel op te vragen.
+3. Klik op "Bekijk broncode" om te zien hoe dit script werkt, of let goed op het gedrag van de dropdown. Wat gebeurt er als je het id verandert?
 
 <details>
-<summary>Hint</summary>
+<summary>Tip</summary>
 
-Dit heet een **Insecure Direct Object Reference (IDOR)**. De server controleert niet of je het recht hebt om andermans gegevens te bekijken. Verander het ID in de URL om andere gebruikers te bekijken.
-
+Het id wordt meegestuurd naar de server via het formulier. Op het lage niveau is er geen enkele controle of jij wel de eigenaar bent van de data die je opvraagt.
 </details>
+
+<details>
+<summary>Antwoord</summary>
+
+Selecteer een andere gebruiker uit het dropdown menu en klik op "Profiel bekijken". Omdat de server geen autorisatie-controle uitvoert in de PHP code, kun je moeiteloos de gegevens van andere gebruikers bekijken.
+</details>
+
+## 3. Investigate (Onderzoeken)
 
 ### Opdracht 2: Medium Security — Verborgen velden
 
-1. Schakel naar **Medium** niveau
-2. Het ID staat nu niet meer in de URL
-3. Open de Developer Tools (F12) en bekijk het formulier
-4. Kun je nog steeds bij andermans gegevens?
+1. Schakel het lab naar **Medium** niveau en start het.
+2. Als je nu de dropdown gebruikt, kun je alleen nog maar je eigen profiel selecteren. De rest is verborgen.
+3. Is de kwetsbaarheid hiermee opgelost? 
 
 <details>
-<summary>Hint</summary>
+<summary>Tip</summary>
 
-Het ID is verplaatst naar een verborgen formulierveld (`<input type="hidden">`). Met de Developer Tools kun je deze waarde aanpassen voordat je het formulier verstuurt.
-
+Webontwikkelaars proberen soms data te verbergen door elementen onzichtbaar te maken in de HTML. Gebruik de **Developer Tools** (F12) van je browser om de HTML van het formulier te inspecteren (Investigate).
 </details>
+
+<details>
+<summary>Antwoord</summary>
+
+Open de Developer Tools in je browser en inspecteer het dropdown-element (`<select>`). Je zult zien dat de `<option>` elementen voor de andere gebruikers niet meer in de dropdown staan. 
+Echter... de controle of jij hun data mag inzien ontbreekt nog steeds in de backend!
+
+Je kunt handmatig een nieuwe `<option value="1">Admin</option>` toevoegen aan de HTML via de Developer Tools, of de `value` van je eigen profiel domweg wijzigen in een ander nummer. Als je daarna op de knop klikt, verstuurt de browser dit gewijzigde ID naar de server. En omdat de server domweg elke aanvraag accepteert, zie je alsnog het profiel!
+</details>
+
+## 4. Modify & Make (Aanpassen & Maken)
+
+Een veelgebruikte ontwerpfout bij beginnende ontwikkelaars is het verstoppen van controles in **JavaScript**.
+
+Stel je voor (als gedachte-experiment) dat een ontwikkelaar JavaScript gebruikt om een extra beveiliging toe te voegen:
+`if (ingelogde_gebruiker !== gekozen_id) { alert("Dit mag niet!"); return false; }`
+
+Waarom is dit **nooit** veilig?
+
+<details>
+<summary>Tip</summary>
+
+Waar draait JavaScript? Op de zwaarbeveiligde server van het bedrijf, of op de laptop van de bezoeker?
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+JavaScript draait in de browser van de bezoeker (Client-Side). Een hacker kan het JavaScript simpelweg uitschakelen, of de code blokkeren via de Developer Tools. Beveiliging en autorisatie moeten **ALTIJD** op de server (Server-Side) plaatsvinden, omdat de server de enige plek is waar de gebruiker niet bij kan komen.
+</details>
+
+## 5. Er gaat iets mis...
+
+Je hebt zojuist ontdekt hoe je via de Developer Tools (F12) hidden fields kunt aanpassen, maar als je dit probeert op een professionele, moderne website, krijg je vaak onmiddellijk een lelijke error of word je direct uitgelogd. Hoe kan dat?
+
+Moderne web-frameworks (zoals React, Angular, Laravel) maken het lastig om zomaar HTML forms te manipuleren omdat ze gebruik maken van *State Management* of *Cryptografische Handtekeningen*. 
+Als een developer een formulierveld cryptografisch ondertekent (een "signed token"), zal de server direct merken dat jij de `1` in een `2` hebt veranderd, omdat de wiskundige handtekening dan niet meer klopt. Het systeem beschouwt de invoer als 'gecorrumpeerd' of 'gemanipuleerd' en werpt een harde foutmelding op, of sluit je uit voorzorg buiten.
 
 ## Wat heb je geleerd?
 
-- **Nooit vertrouwen op client-side beveiliging** — alles in de browser kan aangepast worden
-- De server moet ALTIJD controleren of een gebruiker recht heeft op de gevraagde data
-- Verborgen velden, URL-parameters en cookies zijn geen beveiliging
-- Gebruik altijd **server-side autorisatiecontroles**
+- **Nooit vertrouwen op client-side beveiliging:** Alles in de browser (HTML, JavaScript, hidden fields) kan door de gebruiker worden aangepast.
+- De server moet **ALTIJD** controleren of de ingelogde gebruiker recht heeft op de gevraagde actie of data.
+- Het verbergen van knoppen of dropdown-opties in de interface ("Security by Obscurity") is volstrekt zinloos als de server zelf geen controles doet.

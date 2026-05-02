@@ -1,0 +1,58 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# JavaScript Attacks — Low
+
+Dit onderdeel draait om Client-Side logica. We gaan kijken wat er misgaat als een webserver belangrijke beveiligingsbeslissingen overlaat aan de JavaScript-code die in de browser van de gebruiker draait.
+
+## 1. Predict (Voorspel)
+
+Wanneer je de pagina laadt, roept JavaScript op de achtergrond de functie `generate_token()` aan en verbergt dit token in het formulier.
+Wanneer je het formulier verzendt (met het woord `success`), controleert de backend in PHP of het verborgen ingezonden token wél exact overeenkomt met de hash van het verzonden woord.
+
+**Vraag:** Je typt in het tekstvak `success` en klikt op verzenden. De pagina geeft een "Invalid Token" foutmelding! Waarom?
+
+<details>
+<summary>Antwoord</summary>
+
+Het JavaScript-bestand op de pagina heeft een token gegenereerd voor het standaardwoord dat in de balk stond (bijv. `ChangeMe`). Toen jij de tekst veranderde naar `success`, heeft het formulier de frontend weliswaar veranderd, maar het verborgen token is *niet* geüpdatet door JavaScript! 
+De PHP server krijgt nu het woord `success` plus de token voor het woord `ChangeMe`. Die matchen niet, dus de server weigert de boel.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="javascript_attacks" level="low" />
+
+> ⚠️ **Labbeperking:** Deze aanval vereist toegang tot de **F12 Console** van de kwetsbare pagina om JavaScript-functies aan te roepen. Omdat het lab in een beveiligd iframe draait, is dit beperkt mogelijk. Voor de volledige ervaring heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
+
+Vul het woord `success` in het tekstvak en klik Submit. Merk op dat de token niet geldig is.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Jouw taak is om het woord `success` in te sturen, mét een bijbehorend geldig token. 
+
+<details>
+<summary>Tip</summary>
+
+Aangezien het token genereren puur JavaScript code is in jouw eigen browser, kun jij via F12 de JavaScript-functies zelf handmatig aanroepen met het juiste woord!
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+1. Druk op F12 en ga naar de **Console**.
+2. Typ het volgende in en druk op Enter: `generate_token("success")`
+3. Het script herberekent het token voor dit specifieke woord en stopt het in de verborgen HTML-velden.
+4. Klik nu in de webpagina op de Submit knop. De server accepteert je request!
+</details>
+
+## 4. Er gaat iets mis...
+
+Wat als de webserver dit in theorie helemáál niet door JavaScript had laten uitrekenen? Als de server blind de input van je browser gelooft (zolang de rekensom maar klopt), noem je de webapplicatie een 'Client-Authoritative' systeem. Bij online gaming zien we dit vaak: als de game-client besluit of een schot raak was en de server knikt "Oké", dan staat de deur wagenwijd open voor cheaters en Aimbots. Never trust the client!

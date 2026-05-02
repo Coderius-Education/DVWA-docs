@@ -1,0 +1,44 @@
+---
+sidebar_position: 4
+sidebar_label: 'Impossible'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Weak Session IDs — Impossible
+
+Hoe worden cookies op professionele websites dan wél gegenereerd?
+
+## 1. Predict (Voorspel)
+
+De server is gestopt met zelf knutselen. Hij gebruikt nu Cryptographically Secure Pseudo-Random Number Generators (CSPRNG):
+
+```php
+$cookie_value = sha1( mt_rand() . time() . "Impossible" );
+setcookie("dvwaSession", $cookie_value);
+```
+
+**Vraag:** Waarom maakt de combinatie van een willekeurig getal (`mt_rand`), de huidige tijd (`time`) en een statisch woordje (`Impossible`), die daarna ook nog door een sterk hash algoritme (`sha1`) heen gaan, deze sessie onmogelijk te raden?
+
+<details>
+<summary>Antwoord</summary>
+
+Deze string bevat nu Entropie (totale onvoorspelbaarheid). Zelfs als je exact de seconde (`time`) weet waarop de docent is ingelogd, kun je nooit raden welk gigantisch willekeurig decimaal getal `mt_rand()` exact in die milliseconde erbij heeft gegooid. Omdat er miljoenen mogelijkheden per seconde zijn, valt de uiteindelijke hash niet meer terug te draaien of te voorspellen.
+(Noot: In moderne PHP versies wordt hierachter vaak nog robuustere functies gebruikt zoals `random_bytes()` of default `session_start()` mechanieken).
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="weak_session_ids" level="impossible" />
+
+Kijk hoeveel er aan de voorkant (in de browser) nog af te leiden is uit de verstrekte cookies. Helemaal niets!
+
+## Wat heb je geleerd?
+
+- **Session Hijacking is dodelijk:** Een overgenomen sessiecookie levert direct dezelfde rechten op als het correct invullen van een wachtwoord.
+- **Tijd of telling is geen random:** Getallen die oplopen, of datums, voelen misschien willekeurig, maar zijn voor hackers zeer eenvoudig voorspelbaar.
+- **Crypto-Hashing verbloemt slechte logica niet:** Een zwakke variabele (1, 2, 3) door MD5 halen maakt het geen sterke variabele, het verbergt de zwakte alleen maar heel even achter een optische illusie. 
+- **Gebruik ingebouwde functies:** Ontwerp nooit zélf een sessiebeheersysteem. Elk populair framework heeft ijzersterke generatoren ingebouwd (`session_start()`).
