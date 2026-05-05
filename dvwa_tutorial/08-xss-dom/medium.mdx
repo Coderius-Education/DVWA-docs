@@ -1,0 +1,68 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# XSS (DOM) — Medium
+
+De backend ontwikkelaar probeert de DOM kwetsbaarheid in het *Medium* level te patchen door op de server in te grijpen.
+
+## 1. Predict (Voorspel)
+
+Voordat de webpagina aan de browser wordt gegeven, voert de webserver deze PHP code uit op de opgevraagde URL-parameter:
+
+```php
+if (stripos ($_GET['default'], "&lt;script") !== false) {
+    header ("location: ?default=English");
+    exit;
+}
+```
+
+**Vraag:** Wat doet dit server-side filter, en is hiermee de DOM-XSS kwetsbaarheid écht verdwenen?
+
+<details>
+<summary>Antwoord</summary>
+
+Het filter controleert of het woordje `&lt;script` in de adresbalk staat. Zo ja, stuurt hij je direct terug naar de standaard Engelse versie. 
+Het is echter niet volledig! Net als bij eerdere kwetsbaarheden wordt hier alleen de `&lt;script&gt;` tag afgevangen. We kunnen nog steeds afbeeldingen, iFrames en SVG-elementen misbruiken om JavaScript te injecteren in de DOM!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="xss_dom" level="medium" />
+
+Probeer conceptueel de originele `&lt;script&gt;alert(1)&lt;/script&gt;` te gebruiken (dit zal mislukken of omgeleid worden). 
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Schrijf een payload die de server-side controle omzeilt en via de client-side DOM alsnog zijn werk doet.
+
+<details>
+<summary>Tip</summary>
+
+Net als in de eerdere Low opdracht moet je eerst uit de `&lt;select&gt;` dropdown breken. Sluit de select tag af (`&gt;&lt;/select&gt;`) en voeg dan een afbeelding met het `onerror` attribuut in.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Plaats dit achteraan in de adresbalk (als waarde voor `default=`):
+`English&gt;&lt;/select&gt;&lt;img src="x" onerror="alert(1)"&gt;`
+
+De frontend JavaScript plakt dit in de DOM. Omdat de tag geen `script` bevat, laat de backend-server het netjes door!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- Bij `<script>`-payloads word je teruggestuurd naar `?default=English` — de backend filter heeft je geweigerd.
+- Bij de `<img onerror>`-payload verschijnt een **popup** zonder dat de server iets blokkeert.
+- In F12 Elements zie je de gebroken `<select>`-tag en het `<img>` element naast elkaar in de DOM.
+
+Krijg je nog steeds een redirect of geen popup? Controleer dat je payload **niet** het woord "script" bevat — de backend zoekt case-insensitive op die letters.
+:::

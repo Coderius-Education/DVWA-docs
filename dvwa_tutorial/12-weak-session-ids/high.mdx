@@ -1,0 +1,68 @@
+---
+sidebar_position: 3
+sidebar_label: 'High'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Weak Session IDs — High
+
+We gaan het nog een stapje complexer maken door cryptografie toe te passen.
+
+## 1. Predict (Voorspel)
+
+De server neemt een variabele, bewerkt deze, en versleutelt (hasht) de uitvoer met het algoritme MD5:
+
+```php
+if (!isset ($_SESSION['last_session_id_high'])) {
+    $_SESSION['last_session_id_high'] = 0;
+}
+$_SESSION['last_session_id_high']++;
+$cookie_value = md5( $_SESSION['last_session_id_high'] );
+```
+
+**Vraag:** Je krijgt nu als cookie een gigantische brei aan onbegrijpelijke karakters (een MD5 hash) zoals: `c4ca4238a0b923820dcc509a6f75849b`. Is de code nu eindelijk veilig en onvoorspelbaar?
+
+<details>
+<summary>Antwoord</summary>
+
+Nee! Een hashfunctie zoals MD5 is deterministisch: dezelfde input geeft *altijd* dezelfde output.
+Als je heel goed naar de broncode kijkt... de input is wéér domweg een oplopend getal: `1, 2, 3`. 
+Als hacker kun je de hash `c4ca4238a0...` in een online decoder (zoals Crackstation) gooien. Die zal onmiddellijk vertellen dat dit simpelweg het gehashte getal "1" is. 
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="weak_session_ids" level="high" />
+
+Klik de knop aan en bewaar de vreemde `dvwaSession` MD5 string. Klik de knop nog een keer, en bewaar de tweede string.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Probeer de theorie uit de voorspelling in praktijk te brengen.
+
+<details>
+<summary>Tip</summary>
+
+Ga naar de website `crackstation.net` en plak de lange string die DVWA heeft gegenereerd.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Crackstation analyseert de hash en bevestigt dat de originele tekst in de achtergrond inderdaad slechts een enkel cijfer is. 
+De aanvalsmethode blijft hetzelfde als op het Low-niveau: genereer op je eigen PC lokaal de MD5 hash van getallen in de buurt (bijvoorbeeld MD5(10) of MD5(11)), stel deze hash in als je cookie, en steel de sessie!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- De cookiewaarde is nu een **MD5-hash van 32 hexadecimale tekens** (zoals `c4ca4238a0b923820dcc509a6f75849b`).
+- Plak je die hash in Crackstation: hij wordt direct herkend als de MD5 van een klein cijfer (`1`, `2`, ...).
+- Twee opeenvolgende klikken op de knop geven hashes die op het oog totaal verschillend lijken, maar in werkelijkheid simpelweg `MD5(n)` en `MD5(n+1)` zijn.
+
+Wordt je hash niet door Crackstation herkend? Controleer dat het level rechtsboven op **High** staat — andere levels gebruiken andere algoritmes.
+:::

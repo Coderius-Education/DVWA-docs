@@ -1,0 +1,53 @@
+---
+sidebar_position: 4
+sidebar_label: 'Impossible'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# SQL Injection (Blind) — Impossible
+
+Er is maar één manier om een database compleet immuun te maken.
+
+## 1. Predict (Voorspel)
+
+We zagen de verdediging ook al bij de normale SQL Injection-module.
+
+```php
+$stmt = $db->prepare( 'SELECT first_name, last_name FROM users WHERE user_id = (:id) LIMIT 1;' );
+$stmt->bindParam( ':id', $id, PDO::PARAM_INT );
+$stmt->execute();
+```
+
+**Vraag:** Wat doet `PDO::PARAM_INT` en waarom doodt dit elke poging tot de `SLEEP(5)` injectie?
+
+<details>
+<summary>Antwoord</summary>
+
+Het framework controleert of de variabele wiskundig en letterlijk een Integer (rond getal) is, voordat het de database bereikt. Tekst zoals `AND SLEEP(5)` of aanhalingstekens worden onmiddellijk geweigerd en gecrasht door de backend nog voordat de query wordt uitgevoerd. Zelfs als het filter hem zou doorlaten, zorgt de Prepared Statement (`prepare()`) ervoor dat de database hem weigert!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="sql_injection_blind" level="impossible" />
+
+Kijk hoe de applicatie niet meer is in te palmen, of de timeout van `SLEEP` nou wel of niet is meegegeven.
+
+## 3. ✓ Wat moest je zien?
+
+:::tip Controle
+- Welke payload je ook insluist (`1' AND SLEEP(5) #`, `1 AND 1=1`, …): de pagina **reageert direct**, géén 5-seconden vertraging meer.
+- Voor onbekende ID's: gewoon "Missing", géén SQL-foutmelding, géén stack trace.
+- In de broncode zie je `prepare()`, `bindParam` en `PDO::PARAM_INT` — Prepared Statements maken Boolean én Time-Based blind injection beide onmogelijk.
+
+Zie je tóch een vertraging of foutmelding? Dan zit het level-bordje per ongeluk niet op **Impossible**.
+:::
+
+## Wat heb je geleerd?
+
+- **Blind is niet veilig:** Ontwikkelaars denken soms: "Als ik de SQL foutmelding of de database rijen niet op het scherm print, ben ik veilig." Dit heet *Security by Obscurity*. Boolean en Time-Based attacks omzeilen dit blindelings.
+- **SQLmap automatiseert dit:** Wat we hier handmatig deden met het controleren van pagina-laadtijden, kan een hacker via tools met duizenden raadsels per seconde laten doen.
+- **Input Filtering & Prepared Statements:** Enkel de combinatie van goede data-validatie (alleen Integers verwachten) én parameter-binding (Prepared Statements) garandeert een 100% veilige applicatie.

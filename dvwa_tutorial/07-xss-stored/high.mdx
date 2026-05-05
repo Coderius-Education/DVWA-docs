@@ -1,0 +1,68 @@
+---
+sidebar_position: 3
+sidebar_label: 'High'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# XSS (Stored) — High
+
+Op het High niveau gebruikt de ontwikkelaar dezelfde krachtige regex-filter als bij Reflected XSS voor het Name-veld.
+
+## 1. Predict (Voorspel)
+
+De code doet nu het volgende voor het `Name` veld:
+
+```php
+$name = preg_replace( '/<(.*)s(.*)c(.*)r(.*)i(.*)p(.*)t/i', '', $_POST['txtName'] );
+```
+
+**Vraag:** We weten al dat deze `preg_replace` alles filtert wat op de `&lt;script&gt;` tag lijkt (ongeacht hoofdletters of spaties). Wat is de beste manier om dit te omzeilen?
+
+<details>
+<summary>Antwoord</summary>
+
+We moeten de `script` tag volledig links laten liggen. We gebruiken een andere HTML tag die óók JavaScript kan uitvoeren, zoals het `onerror` event van een `&lt;img&gt;` of `&lt;svg&gt;`.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab:
+
+<DvwaLab module="xss_stored" level="high" />
+
+Verander (zoals geleerd bij Medium) de `maxlength` van het Name-veld weer via F12, zodat je lange teksten kunt typen.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Bouw een payload die géén `script` bevat, en gebruik deze in het Name veld om een blijvende Stored XSS infectie te creëren.
+
+<details>
+<summary>Tip</summary>
+
+Maak gebruik van de nep-afbeelding methode.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+1. Zet de `maxlength` via F12 op `100`.
+2. Vul in bij Name: `&lt;img src="x" onerror="alert('High')"&gt;`
+3. Het filter ziet nergens de tekst "script" staan, dus de database slaat het bericht keurig op.
+4. Omdat de afbeelding 'x' niet bestaat, knalt de fout-afhandeling direct in beeld!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- Geen `<script>`-variant werkt meer in Name; de regex haalt alles weg dat ook maar lijkt op "script".
+- Met `<img src="x" onerror="alert('High')">` in Name verschijnt **wel een popup** — en blijft die popup terugkomen bij elke F5.
+- In het gastenboek zie je een gebroken afbeeldingsicoon staan (de "x" die niet bestaat).
+
+Geen popup? Controleer dat je in F12 de `maxlength` van Name omhoog hebt gezet, anders past je `<img>`-tag niet eens in het veld.
+:::
+
+## 5. Er gaat iets mis...
+
+Wat als de lijst in het gastenboek te vol wordt met allemaal lelijke (mislukte) `&lt;img src="x"&gt;` tekens? Je kunt altijd via het hoofdmenu van DVWA onder `Setup / Reset DB` de knop indrukken om de database schoon te vegen. Hacker-hygiëne is óók belangrijk!

@@ -1,0 +1,60 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# Authorization Bypass — Medium
+
+De webontwikkelaar probeert dit lek te verbergen door de opties in het keuzemenu te verwijderen.
+
+## 1. Predict (Voorspel)
+
+De ontwikkelaar past de website (de frontend) aan:
+"Als ik er gewoon voor zorg dat de gebruiker in het dropdown-menu alleen maar zijn *eigen* naam kan selecteren, kan hij nooit de ID's van anderen opvragen!"
+
+**Vraag:** Heeft de ontwikkelaar hiermee de *Insecure Direct Object Reference* (IDOR) kwetsbaarheid verholpen?
+
+<details>
+<summary>Antwoord</summary>
+
+Nee! Het verwijderen van opties op je beeldscherm is slechts een optische verandering ("Security by Obscurity"). Een browser staat volledig onder controle van de gebruiker. Een hacker kan via de F12 Developer Tools zélf andere opties toevoegen of formulier-waardes aanpassen voordat ze naar de server verstuurd worden.
+Als de server het daarna klakkeloos goedkeurt, is het lek nog altijd aanwezig.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="authorization_bypass" level="medium" />
+
+Bekijk de dropdown. Inderdaad, je kunt nu alleen je eigen profiel nog selecteren. Druk op F12 (Developer Tools) en inspecteer het dropdown menu. 
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Je opdracht: vraag alsnog het profiel van iemand anders (bijvoorbeeld admin/ID 1) op.
+
+<details>
+<summary>Tip</summary>
+
+Verander in de Developer Tools de `value` van jouw enige optie in de lijst.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Zoek in de F12 Inspector naar: `<option value="...">...`. Verander de `value` naar `1` en druk op Enter. Klik nu in de normale webpagina op Submit.
+Je browser stuurt nu het valse ID naar de server. Omdat er op de backend nog altijd geen controle zit, zie je gewoon de gegevens!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- Hoewel de dropdown maar één optie (jouw eigen naam) toont, krijg je na Submit het **profiel van iemand anders** (bijvoorbeeld admin, ID 1) op je scherm.
+- In F12 Elements zie je dat je `value="1"` hebt veranderd; de zichtbare tekst van de optie maakt niet uit.
+- Géén "Toegang geweigerd"-melding: de server slikt het valse ID volledig.
+
+Krijg je nog steeds je eigen profiel? Dan veranderde je de tekst tussen de `<option>`-tags in plaats van het `value`-attribuut. Pas in F12 Elements de `value="…"` zelf aan.
+:::

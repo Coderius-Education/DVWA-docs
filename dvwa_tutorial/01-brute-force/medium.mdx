@@ -1,0 +1,80 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+---
+
+# Brute Force — Medium
+
+Start `DVWA` en ga naar de challenge `Brute Force`. Zorg dat je `DVWA Security` op **medium** hebt staan.
+(Ben je vergeten hoe dit moet? Ga dan naar de [cheatsheet](../../docs/cheatsheet)).
+
+## 1. Predict (Voorspel)
+
+De *medium* challenge voegt twee zaken toe om de beveiliging te verbeteren:
+1. Alle invoer wordt strakker gecontroleerd op 'bijzondere' tekens.
+2. Als een inlogpoging mislukt, dwingt de server een `sleep(2)` vertraging af. Hierdoor wordt elke foute poging met 2 seconden vertraagd.
+
+**Vraag:** Wat voor een effect heeft die `sleep(2)` op ons Hydra-commando van het vorige level?
+
+<details>
+<summary>Antwoord</summary>
+
+Hydra probeerde duizenden wachtwoorden per minuut. Door de vertraging van 2 seconden per foute poging, loopt Hydra nu extreem veel vertraging op. Als het wachtwoord ergens onderaan de miljoenen regels van `rockyou.txt` staat, duurt de aanval ineens dagen of maanden!
+</details>
+
+## 2. Run & Investigate
+
+Probeer nogmaals exact het `hydra` commando uit dat je bij het *low* level hebt gebruikt. 
+**Belangrijk:** pas wel `security=low` aan naar `security=medium` in de commando-tekst!
+
+*Tip: Je kunt de duur van een linux commando precies meten door het woordje `time` helemaal aan het begin van je regel te zetten:*
+`time hydra -l admin ...`
+
+Wat valt je op aan de snelheid? Hij is verschrikkelijk traag geworden.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Omdat de server per proces/verbinding 2 seconden wacht, duurt het controleren door 1 taak te lang. Maar wat als we tegelijkertijd met de server praten via meerdere "lijntjes"? 
+
+Inspecteer de documentatie van `hydra` door in je terminal het commando `hydra -h` in te typen.
+Zoek een command-line optie (een "vlaggetje", bijvoorbeeld `-x` of `-t`) waarmee je kunt bepalen hoeveel taken/processen er tegelijk parallel een inlogpoging gaan doen.
+
+Pas je `hydra` commando aan zodat er meer taken tegelijk gaan draaien. Meet het resultaat nogmaals met `time`.
+
+<details>
+<summary>Tip</summary>
+
+Zoek in de Hydra helptekst naar het woord "tasks" of "parallel". Het is de kleine letter `-t`.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Voeg `-t 16` toe aan je Hydra commando om 16 parallelle inlogpogingen tegelijk uit te voeren. Voorbeeld:
+`hydra -t 16 -l admin -P /usr/share/wordlists/rockyou.txt ...`
+Dit splitst het werk op in stukjes, waardoor de sleep(2) vertraging veel minder impact heeft op de totale rekentijd.
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- Met `time` voor je commando zie je twee duidelijk verschillende eindtijden: zónder `-t`-vlag duurt het minutenlang, mét `-t 16` is Hydra een stuk sneller klaar.
+- Hydra spuugt nog steeds dezelfde **groene** "login: admin password: password"-regel uit; alleen de totale duur is anders.
+- Je hebt `security=low` netjes vervangen door `security=medium` in het Hydra-commando.
+
+Komt dit niet overeen? Controleer dat je daadwerkelijk `security=medium` in het commando hebt staan én dat je `-t 16` (de letter t, niet T) in de juiste volgorde hebt toegevoegd.
+:::
+
+## 5. Er gaat iets mis...
+
+Je bent enthousiast geworden en besluit niet `-t 16`, maar `-t 1000` te gebruiken. Je commando faalt grandioos of de DVWA website is opeens niet meer bereikbaar. Wat is er aan de hand?
+
+Je hebt zojuist per ongeluk een **Denial of Service (DoS)** aanval uitgevoerd op je eigen DVWA server! 
+Door 1000 connecties tegelijk te openen, raakt de Apache-webserver volledig overbelast. Hij kan de stroom aan verzoeken niet meer aan en crasht, of de database blokkeert de verbindingen. 
+Hier ligt de subtiele kunst van het hacken: je moet snel genoeg gaan om voor het avondeten klaar te zijn, maar langzaam genoeg om de server niet over de kling te jagen.
+
+## Iets meer informatie bij dit level
+
+Je vraagt je misschien af: waarom lukte het op *medium* zonder al te veel moeite, ondanks de vertraging?
+Dit ging goed omdat het wachtwoord (`password`) heel eenvoudig is en toevallig ergens in de top 100 van de wordlist (`rockyou.txt`) staat. Als het om een ingewikkeld wachtwoord gaat ergens aan het einde van de lijst van 14 miljoen woorden, zou het met een `sleep(2)` inderdaad onmogelijk lang duren, zelfs met 16 parallelle taken. 
+Bovendien wisten we de loginaam (`admin`) hier al, wat de rekentijd enorm verkort. In een 'real life' situatie is een willekeurige sleep-vertraging (Throttling) dus best een effectieve (hoewel simpele) verdedigingslinie!
