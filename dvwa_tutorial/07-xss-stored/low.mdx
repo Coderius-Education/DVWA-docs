@@ -1,0 +1,71 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# XSS (Stored) — Low
+
+Bij **Stored XSS** wordt de kwaadaardige code daadwerkelijk op de server (in de database) opgeslagen. Dit is veel gevaarlijker dan Reflected XSS!
+
+## 1. Predict (Voorspel)
+
+Stel, je bent op een forum of gastenboek. Je typt een bericht en klikt op opslaan. De code doet het volgende:
+
+```php
+$message = $_POST['txtMessage'];
+$name = $_POST['txtName'];
+
+$query  = "INSERT INTO guestbook (comment, name) VALUES ('$message', '$name');";
+// Even later, bij het laden van de pagina voor ALTIJD:
+echo "<div>Naam: $name <br> Bericht: $message</div>";
+```
+
+**Vraag:** Wat gebeurt er met *andere* bezoekers van dit gastenboek als jij `&lt;script&gt;alert("Hack!");&lt;/script&gt;` als bericht plaatst?
+
+<details>
+<summary>Antwoord</summary>
+
+Omdat het script in de database wordt opgeslagen, wordt het vanaf nu permanent op de pagina geprint. **Elke bezoeker** die het gastenboek opent, zal de pop-up krijgen, zonder dat ze op een vreemd linkje hoefden te klikken! Dit maakt Stored XSS extreem besmettelijk.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab. Je ziet een simpel gastenboek waar je een naam en een bericht kunt achterlaten.
+
+<DvwaLab module="xss_stored" level="low" />
+
+Vul een onschuldig bericht in en kijk hoe het in de lijst verschijnt.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Tijd om het gastenboek te infecteren.
+
+<details>
+<summary>Tip</summary>
+
+Gebruik exact dezelfde payload als bij Reflected XSS.
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Vul als bericht (of naam) in: `&lt;script&gt;alert(1);&lt;/script&gt;`. Zodra je dit opslaat, wordt de pagina herladen en krijg je de alert. Ververs de pagina nog eens (F5). Je krijgt *weer* de alert, omdat de payload nu vast in het gastenboek staat!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- Direct na opslaan verschijnt een **popup met `1`** (of jouw alert-tekst).
+- Druk op F5 (vernieuwen): de **popup verschijnt opnieuw** — bewijs dat de payload permanent in de database staat.
+- In het gastenboek zie je het bericht zelf niet meer als zichtbare tekst; alleen de naam staat er nog (en de browser voert het script in stilte uit).
+
+Geen popup na opslaan? Controleer dat je de payload écht hebt verstuurd (Sign Guestbook geklikt) en dat de browser geen krachtige XSS-blokker actief heeft.
+:::
+
+## 5. Er gaat iets mis...
+
+Wat als je per ongeluk een script opslaat dat de pagina oneindig blijft herladen (`window.location.reload()`)? 
+Omdat het Stored XSS is, kom je zelf óók vast te zitten in de oneindige loop! Om dit te herstellen moet je vaak de database van DVWA resetten via de `Setup / Reset DB` knop in het hoofdmenu. Pas op met wat je opslaat!

@@ -1,0 +1,70 @@
+---
+sidebar_position: 1
+sidebar_label: 'Low'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# File Upload — Low
+
+Websites hebben vaak een functie om afbeeldingen (zoals profielfoto's) te uploaden. Een slecht beveiligde upload-functie is een van de snelste manieren voor een hacker om de server compleet over te nemen.
+
+## 1. Predict (Voorspel)
+
+Wanneer je op het Low level een bestand uploadt, doet de server dit:
+
+```php
+$target_path  = "../../hackable/uploads/";
+$target_path .= basename( $_FILES[ 'uploaded' ][ 'name' ] );
+
+move_uploaded_file( $_FILES[ 'uploaded' ][ 'tmp_name' ], $target_path );
+```
+
+**Vraag:** Dit script is ontworpen voor afbeeldingen. Wat gebeurt er als je een tekstbestand met de naam `hack.php` uploadt waarin PHP-code staat? Wordt dit geweigerd?
+
+<details>
+<summary>Antwoord</summary>
+
+Nee, de server weigert helemaal niets! Het script verplaatst domweg het geüploade bestand (`hack.php`) naar een voor het publiek toegankelijke map (`/hackable/uploads/`).
+Zodra je daarna via je eigen browser navigeert naar het bestand: `http://localhost/hackable/uploads/hack.php`, voert de server jouw zelfgeschreven PHP code uit! Met één simpel bestand heb je zo een **Web Shell** gecreëerd waarmee je volledige controle over de server krijgt.
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="file_upload" level="low" />
+
+Je ziet een eenvoudig formulier om een afbeelding te uploaden.
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Maak een kwaadaardig bestandje aan en upload het naar de server om een opdracht uit te voeren.
+
+<details>
+<summary>Tip</summary>
+
+Maak op je eigen PC (met Kladblok) een bestandje aan met de naam `shell.php`.
+Zet daar de volgende code in:
+`<?php echo system('whoami'); ?>`
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+1. Upload het `shell.php` bestand via het DVWA formulier.
+2. Je ziet op het scherm staan waar hij is opgeslagen (vaak is dat `../../hackable/uploads/shell.php`).
+3. Ga in je browser naar die specifieke URL (bijvoorbeeld `http://localhost/DVWA/hackable/uploads/shell.php`).
+4. In plaats van een gedownload bestand, zie je ineens je accountnaam in de browser! De webserver heeft jouw meegeleverde code uitgevoerd.
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- DVWA toont na het uploaden een groene melding zoals **"`../../hackable/uploads/shell.php` succesfully uploaded!"** — zonder enige type-check.
+- Wanneer je in een nieuw tabblad naar `http://localhost/DVWA/hackable/uploads/shell.php` navigeert, verschijnt **alleen** de tekst `www-data` (of een vergelijkbare accountnaam).
+- Géén PHP-broncode op het scherm: de server heeft het bestand uitgevoerd in plaats van laten zien.
+
+Zie je je PHP-code als platte tekst of een download? Dan staat de map niet als PHP-uitvoerbaar geconfigureerd, of klikte je in plaats daarvan op de gegenereerde link binnen de DVWA-pagina zelf.
+:::

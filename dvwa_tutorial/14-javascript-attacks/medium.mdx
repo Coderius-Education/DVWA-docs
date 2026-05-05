@@ -1,0 +1,67 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+hide_table_of_contents: true
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# JavaScript Attacks — Medium
+
+De ontwikkelaar is geschrokken. Mensen roepen zijn JavaScript functies in de console aan! Tijd om de code onleesbaar te maken.
+
+## 1. Predict (Voorspel)
+
+De broncode van de pagina bevat nu een extern JavaScript bestand dat zwaar is ge-obfusceerd (Minified/Obfuscated). Het ziet eruit als een wirwar van letters:
+
+```javascript
+eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!''.replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}...
+```
+
+**Vraag:** Heeft de ontwikkelaar hiermee de kwetsbaarheid uit het *Low* level weggenomen? Waarom (niet)?
+
+<details>
+<summary>Antwoord</summary>
+
+Nee, de code is misschien lastig om te lezen voor een mens (Security by Obscurity), maar een browser moet de code uiteindelijk gewoon kunnen uitvoeren! Via de Developer Tools kun je altijd "Pretty Print" of De-obfuscators gebruiken om het bestand weer in nette inspringing (tabs en enters) te zien. De functie om het token te maken staat daar nog steeds gewoon in, hij heeft misschien alleen een gekkere naam gekregen!
+</details>
+
+## 2. Run & Investigate
+
+Start het lab.
+
+<DvwaLab module="javascript_attacks" level="medium" />
+
+> ⚠️ **Labbeperking:** Deze aanval vereist toegang tot het **F12 Sources-tabblad** en de **Console** om ge-obfusceerde JavaScript te ontcijferen. Omdat het lab in een beveiligd iframe draait, is dit beperkt mogelijk. Voor de volledige ervaring heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
+
+Ga naar F12 en open het tabblad **Sources** (of Debugger). Zoek het JavaScript bestand van deze module op (vaak iets als `medium.js`).
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+Ontcijfer de code, vind de juiste functie, genereer de token voor het woord `success` en verzend het formulier succesvol!
+
+<details>
+<summary>Tip</summary>
+
+Klik onderin je Sources tabblad op het icoontje met de twee haakjes `{}` ("Pretty Print"). De code is nu veel beter leesbaar. Zoek naar een functie met een opvallende naam, zoals `do_something(e)`. 
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+1. Je zult zien dat er een functie bestaat, vaak genaamd `do_something(e)`.
+2. Deze functie wordt blijkbaar gebruikt om het token aan te maken in de achtergrond.
+3. Open je F12 Console.
+4. Voer de magische spreuk uit: `do_something("XXsuccessXX")` (of exact de input die het script in deze versie van DVWA verwacht).
+5. Druk op de Submit knop in de pagina. Succes!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- In een **lokale DVWA-installatie**: na de Pretty Print zie je in F12 Sources een functie zoals `do_something(e)` — onleesbaar maken hield je hooguit een minuut tegen.
+- Na het aanroepen van die functie in de Console én Submit krijg je **"Well done!"**.
+- In het **iframe-lab hier**: via **Bekijk broncode** zie je de obfuscated JavaScript-bron staan. Daarmee zie je het concept (de logica is nog gewoon aanwezig, alleen onleesbaar gemaakt).
+
+Vind je geen leesbare functie na Pretty Print? Zoek dan in de gepretty-printe code naar `token` of `phrase` — zo lokaliseer je de plek waar het token wordt opgebouwd.
+:::

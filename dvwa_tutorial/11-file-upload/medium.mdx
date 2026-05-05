@@ -1,0 +1,84 @@
+---
+sidebar_position: 2
+sidebar_label: 'Medium'
+---
+
+import DvwaLab from '@site/src/components/DvwaLab';
+
+# File Upload — Medium
+
+De ontwikkelaar heeft geleerd van het *Low* niveau en controleert nu het type van het bestand.
+
+## 1. Predict (Voorspel)
+
+Bekijk de broncode van het Medium niveau. Je ziet een extra `if`-statement:
+
+```php
+if (($_FILES['uploaded']['type'] == "image/jpeg" || $_FILES['uploaded']['type'] == "image/png") &&
+    ($_FILES['uploaded']['size'] < 100000)) {
+    // Bestand is een afbeelding en niet te groot, uploaden mag!
+} else {
+    // Foutmelding: bestand moet een JPEG of PNG afbeelding zijn.
+}
+```
+
+**Vraag:** De server kijkt naar het `type` dat de browser doorgeeft. Wat gebeurt er als je jouw `shell.php` van het vorige level probeert te uploaden?
+
+<details>
+<summary>Antwoord</summary>
+
+De upload zal falen. Jouw browser (bijv. Chrome of Firefox) herkent dat `.php` een script is en stuurt als type `application/x-php` mee in het verzoek. Omdat de server *alleen* `image/jpeg` of `image/png` accepteert, wordt jouw shell geweigerd.
+</details>
+
+## 2. Run & Investigate
+
+1. Start het lab op **Medium** niveau.
+2. Probeer je `shell.php` bestand te uploaden.
+3. Zie de foutmelding: *"Your image was not uploaded. We can only accept JPEG or PNG images."*
+
+De server vertrouwt op de informatie die de browser stuurt. Maar een hacker kan die informatie aanpassen vóórdat het de server bereikt!
+
+## 3. Modify & Make (Aanpassen & Maken)
+
+We moeten de server foppen door te zeggen: "Dit is echt een JPEG afbeelding!", terwijl het eigenlijk PHP-code is. 
+
+Omdat we geen Burp Suite willen gebruiken, kunnen we dit doen met een krachtig Linux-commando: **curl**. Met `curl` kun je een bestand uploaden en zelf bepalen welk 'type' je de server vertelt.
+
+**Opdracht:**
+Draai het volgende commando in je Kali-terminal (vergeet niet je eigen `PHPSESSID` in te vullen!). Let op de toevoeging `;type=image/jpeg` achter de bestandsnaam:
+
+```bash
+curl -v -F "uploaded=@shell.php;type=image/jpeg" -F "Upload=Upload" -H "Cookie: PHPSESSID=JOUW_SESSION_ID; security=medium" http://localhost/DVWA/vulnerabilities/upload/
+```
+
+<details>
+<summary>Tip</summary>
+
+De `-F` vlag staat voor 'Form'. Door `;type=image/jpeg` achter de bestandsnaam te plakken, dwing je curl om de server te vertellen dat dit een foto is. De server in DVWA controleert alleen deze tekst en gelooft je op je woord!
+</details>
+
+<details>
+<summary>Antwoord</summary>
+
+Na het draaien van het commando zie je in de output van curl waarschijnlijk de tekst: `../../hackable/uploads/shell.php succesfully uploaded!`.
+Je hebt het filter omzeild door te liegen over het bestandstype!
+</details>
+
+## 4. ✓ Wat moest je zien?
+
+:::tip Controle
+- Je krijgt een succesmelding, ondanks dat je een `.php` bestand hebt geüpload.
+- Als je in de browser naar `http://localhost/DVWA/hackable/uploads/shell.php` gaat, werkt je shell nog steeds.
+- Je hebt begrepen dat de server-side controle `$_FILES['uploaded']['type']` onveilig is, omdat deze volledig afhankelijk is van wat de verzender beweert.
+:::
+
+## 5. Er gaat iets mis...
+
+Je probeert het commando maar krijgt een `404 Not Found` of een inlogscherm terug in de tekst.
+Waarschijnlijk klopt je URL niet helemaal of is je `PHPSESSID` verlopen. Een sessie in DVWA verloopt soms snel. Ververs je browser even, pak het nieuwe ID en probeer het commando opnieuw.
+
+## Wat heb je geleerd?
+
+- **MIME-type checks zijn onbetrouwbaar:** Een aanvaller kan de headers van een verzoek eenvoudig manipuleren.
+- **Client-side data nooit vertrouwen:** Alles wat van de browser (of curl) komt, kan een leugen zijn.
+- **In-depth verdediging:** Een goede server moet niet alleen naar het type kijken, maar ook naar de extensie en eventueel de inhoud van het bestand (bijv. kijken of het écht pixels bevat).
