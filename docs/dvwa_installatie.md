@@ -25,4 +25,4 @@ Tips:
 - bij `Enter SQL password (press Enter for no password):` --> druk op Enter
 
 ## Hoe start ik DVWA?
-Kijk in de [Cheatsheet](cheatsheet.md) voor het opstarten, inloggen en instellen op DVWA.
+Kijk in de [Cheatsheet](cheatsheet) voor het opstarten, inloggen en instellen op DVWA.
