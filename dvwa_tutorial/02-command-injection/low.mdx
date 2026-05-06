@@ -12,11 +12,22 @@ Voor **Command Injection** is het belangrijk dat we ons eerst verdiepen in het s
 
 ## 1. Predict (Voorspel)
 
-Bekijk onderstaande video kort om een idee te krijgen van wat dit commando doet:
+Kijk eens naar de volgende (vereenvoudigde) code die wordt gebruikt om een IP-adres te pingen:
 
-<iframe width="920" height="517" src="https://www.youtube.com/embed/xIT0yrYsyWY" title="The ping command in 60 seconds or less" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+```php
+$target = $_REQUEST[ 'ip' ];
+$cmd = shell_exec( 'ping -c 4 ' . $target );
+echo $cmd;
+```
 
-**Vraag:** Wat doet een Linux-server als jij in de terminal `ping 127.0.0.1` typt?
+<details>
+<summary>Hulp bij PHP syntax</summary>
+
+- `shell_exec()`: Dit vertelt de webserver om een commando uit te voeren op het onderliggende besturingssysteem (Linux), alsof je het zelf in de terminal typt.
+- `.` (punt): Plakt de variabele `$target` direct achter de tekst `ping -c 4 `.
+</details>
+
+**Vraag:** Wat denk je dat dit script doet als een gebruiker de volgende tekst invult bij het IP-adres: `127.0.0.1; whoami`?
 
 <details>
 

@@ -108,18 +108,17 @@ const config = {
         title: 'Coderius-DVWA',
         items: [
           {
-            to: 'docs/linux_leren',
+            to: '/docs/linux_leren',
             label: 'Linux leren',
             position: 'left',
           },
           {
-            to: 'docs/installatie',
+            to: '/docs/installatie',
             label: 'WSL installeren',
             position: 'left',
           },
-
           {
-            to: 'docs/dvwa_installatie',
+            to: '/docs/dvwa_installatie',
             label: 'DVWA installeren',
             position: 'left',
           },
@@ -147,7 +146,7 @@ const config = {
           },
 
           {
-            to: 'docs/cheatsheet',
+            to: '/docs/cheatsheet',
             label: 'Cheatsheet',
             position: 'left',
           },
