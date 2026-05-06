@@ -20,34 +20,36 @@ $stmt->bindParam( ':id', $id, PDO::PARAM_INT );
 $stmt->execute();
 ```
 
-**Vraag:** Wat doet `PDO::PARAM_INT` en waarom doodt dit elke poging tot de `SLEEP(5)` injectie?
+**Vraag:** Wat doet `PDO::PARAM_INT` en waarom doodt dit elke poging tot de `SLEEP(5)`-injectie?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Het framework controleert of de variabele wiskundig en letterlijk een Integer (rond getal) is, voordat het de database bereikt. Tekst zoals `AND SLEEP(5)` of aanhalingstekens worden onmiddellijk geweigerd en gecrasht door de backend nog voordat de query wordt uitgevoerd. Zelfs als het filter hem zou doorlaten, zorgt de Prepared Statement (`prepare()`) ervoor dat de database hem weigert!
+Het framework controleert of de variabele wiskundig en letterlijk een Integer (rond getal) is, voordat het de database bereikt. Tekst zoals `AND SLEEP(5)` of aanhalingstekens worden onmiddellijk geweigerd door de backend nog voordat de query wordt uitgevoerd. Zelfs als het filter hem zou doorlaten, zorgt de Prepared Statement (`prepare()`) ervoor dat de database hem weigert!
+
 </details>
 
 ## 2. Run & Investigate
 
-Start het lab.
+Start het lab en probeer alle eerdere payloads.
 
 <DvwaLab module="sql_injection_blind" level="impossible" />
 
-Kijk hoe de applicatie niet meer is in te palmen, of de timeout van `SLEEP` nou wel of niet is meegegeven.
+Vul `1' AND SLEEP(5) #` in en kijk of de pagina vertraagt. Probeer ook `1 AND SLEEP(5)`. Observeer hoe de applicatie reageert.
 
 ## 3. ✓ Wat moest je zien?
 
 :::tip Controle
-- Welke payload je ook insluist (`1' AND SLEEP(5) #`, `1 AND 1=1`, …): de pagina **reageert direct**, géén 5-seconden vertraging meer.
-- Voor onbekende ID's: gewoon "Missing", géén SQL-foutmelding, géén stack trace.
-- In de broncode zie je `prepare()`, `bindParam` en `PDO::PARAM_INT` — Prepared Statements maken Boolean én Time-Based blind injection beide onmogelijk.
+- Elke SQL-injectie-poging levert direct een "Invalid" of "Missing"-melding op — zonder enige vertraging.
+- `1 AND SLEEP(5)` veroorzaakt geen 5-secondenvertraging meer.
+- De applicatie gedraagt zich exact hetzelfde, ongeacht wat je invoert.
 
-Zie je tóch een vertraging of foutmelding? Dan zit het level-bordje per ongeluk niet op **Impossible**.
+Zie je toch een vertraging? Controleer of het security level correct op **impossible** staat.
 :::
 
-## Wat heb je geleerd?
+**Blind is niet veilig:** Ontwikkelaars denken soms: "Als ik de SQL-foutmelding of de database-rijen niet op het scherm print, ben ik veilig." Dit heet *Security by Obscurity*. Boolean- en Time-Based aanvallen omzeilen dit volledig.
 
-- **Blind is niet veilig:** Ontwikkelaars denken soms: "Als ik de SQL foutmelding of de database rijen niet op het scherm print, ben ik veilig." Dit heet *Security by Obscurity*. Boolean en Time-Based attacks omzeilen dit blindelings.
-- **SQLmap automatiseert dit:** Wat we hier handmatig deden met het controleren van pagina-laadtijden, kan een hacker via tools met duizenden raadsels per seconde laten doen.
-- **Input Filtering & Prepared Statements:** Enkel de combinatie van goede data-validatie (alleen Integers verwachten) én parameter-binding (Prepared Statements) garandeert een 100% veilige applicatie.
+**SQLmap automatiseert dit:** Wat we hier handmatig deden met het controleren van pagina-laadtijden, kan een hacker via tools met duizenden raadsels per seconde laten doen.
+
+**Input Filtering én Prepared Statements:** Enkel de combinatie van goede data-validatie (alleen Integers verwachten) én parameter-binding (Prepared Statements) garandeert een veilige applicatie.

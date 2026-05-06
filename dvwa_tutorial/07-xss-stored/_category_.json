@@ -1,6 +1,6 @@
 {
   "label": "XSS (Stored)",
-  "position": 5,
+  "position": 7,
   "link": {
     "type": "generated-index",
     "description": "XSS (Stored)"

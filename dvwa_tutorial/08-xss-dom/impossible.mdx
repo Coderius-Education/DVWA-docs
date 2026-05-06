@@ -15,7 +15,7 @@ Hoe beveilig je een frontend tegen dit soort lokale DOM-manipulaties?
 De server hoeft hiervoor helemaal niets te doen! De oplossing zit verborgen in de manier waarop we de tekst op het scherm "tekenen" via JavaScript in plaats van het aan de HTML vast te knopen.
 
 In plaats van: `document.write(lang)`
-Doen ontwikkelaars nu dit: 
+Doen ontwikkelaars nu dit:
 ```javascript
 const element = document.getElementById("taalDropdown");
 element.textContent = lang; // Of .innerText
@@ -24,32 +24,34 @@ element.textContent = lang; // Of .innerText
 **Vraag:** Waarom zijn `.textContent` of vergelijkbare eigenschappen immuun voor DOM XSS?
 
 <details>
+
 <summary>Antwoord</summary>
 
 Wanneer je `document.write` of `.innerHTML` gebruikt, zegt de browser: "Ik ga deze tekst ontleden en opbouwen alsof het HTML is." Als daar `<script>` in zit, wekt hij dat tot leven.
-Gebruik je `.textContent` of `.innerText`, dan zegt de browser: "Dit is uitsluitend platte letter-tekst." Een script tag wordt dan letterlijk als platte tekst op het scherm gezet en absoluut genegeerd door de compiler!
+Gebruik je `.textContent` of `.innerText`, dan zegt de browser: "Dit is uitsluitend platte letter-tekst." Een script-tag wordt dan letterlijk als platte tekst op het scherm gezet en absoluut genegeerd door de parser!
+
 </details>
 
 ## 2. Run & Investigate
 
-Start het lab.
+Start het lab en probeer alle eerdere aanvallen.
 
 <DvwaLab module="xss_dom" level="impossible" />
 
-Probeer de hash truc of de drop-down escape truc. Het werkt niet meer, want de browser beschouwt jouw injecties simpelweg als platte tekst.
+Probeer de hash-truc en de dropdown-escape-truc. Observeer dat alle payloads als platte tekst op het scherm verschijnen.
 
 ## 3. ✓ Wat moest je zien?
 
 :::tip Controle
-- Welke payload je ook in de URL of hash zet: **geen popup**, geen DOM-doorbraak.
-- In F12 Elements zie je dat je payload als **platte tekst** in de dropdown verschijnt — de `<` en `>` worden niet meer als HTML geïnterpreteerd.
-- De `<select>`-structuur blijft heel; je krijgt geen kapotte iframes of escapes meer voor elkaar.
+- Elke payload (inclusief `<script>alert(1)</script>`) verschijnt als **letterlijke tekst** — geen pop-up.
+- De browser behandelt alle invoer als platte tekst, niet als HTML-code.
+- Ook de hash-truc heeft geen effect meer.
 
-Krijg je tóch een popup? Dan staat het level rechtsboven niet op **Impossible**.
+Zie je toch een pop-up? Controleer of het security level correct op **impossible** staat.
 :::
 
-## Wat heb je geleerd?
+**DOM XSS is uniek:** De aanval bereikt de backend-server vaak niet eens (zeker als je de `#`-hash-truc gebruikt).
 
-- **DOM XSS is uniek:** De aanval bereikt de backend server vaak niet eens (zeker als je de `#` hash trick gebruikt).
-- **Backend filters zijn zinloos:** Een firewall of server-side check heeft geen enkele waarde als de kwaadaardige code rechtstreeks in de browser van de gebruiker rondzwerft.
-- **Gebruik veilige JS functies:** Vermijd het gebruik van `document.write()`, `.innerHTML` en `eval()`. Gebruik altijd data-binders (zoals React gebruikt) of `.textContent`!
+**Backend-filters zijn zinloos:** Een firewall of server-side check heeft geen enkele waarde als de kwaadaardige code rechtstreeks in de browser van de gebruiker rondzwerft.
+
+**Gebruik veilige JS-functies:** Vermijd het gebruik van `document.write()`, `.innerHTML` en `eval()`. Gebruik altijd data-binders (zoals React gebruikt) of `.textContent`!

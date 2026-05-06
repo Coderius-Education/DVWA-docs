@@ -10,6 +10,9 @@ GEMINI.md
 .docusaurus
 .cache-loader
 
+# Claude Code
+.claude/
+
 # Misc
 .DS_Store
 .env.local

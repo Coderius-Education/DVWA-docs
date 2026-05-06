@@ -12,43 +12,45 @@ Hoe worden cookies op professionele websites dan wél gegenereerd?
 
 ## 1. Predict (Voorspel)
 
-De server is gestopt met zelf knutselen. Hij gebruikt nu Cryptographically Secure Pseudo-Random Number Generators (CSPRNG):
+De server stopt met zelf knutselen en combineert echte willekeur met een sterk hashalgoritme:
 
 ```php
 $cookie_value = sha1( mt_rand() . time() . "Impossible" );
 setcookie("dvwaSession", $cookie_value);
 ```
 
-**Vraag:** Waarom maakt de combinatie van een willekeurig getal (`mt_rand`), de huidige tijd (`time`) en een statisch woordje (`Impossible`), die daarna ook nog door een sterk hash algoritme (`sha1`) heen gaan, deze sessie onmogelijk te raden?
+**Vraag:** Waarom maakt de combinatie van een willekeurig getal (`mt_rand`), de huidige tijd (`time`) en een vast woordje, daarna gehasht via SHA1, deze sessie onmogelijk te raden?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Deze string bevat nu Entropie (totale onvoorspelbaarheid). Zelfs als je exact de seconde (`time`) weet waarop de docent is ingelogd, kun je nooit raden welk gigantisch willekeurig decimaal getal `mt_rand()` exact in die milliseconde erbij heeft gegooid. Omdat er miljoenen mogelijkheden per seconde zijn, valt de uiteindelijke hash niet meer terug te draaien of te voorspellen.
-(Noot: In moderne PHP versies wordt hierachter vaak nog robuustere functies gebruikt zoals `random_bytes()` of default `session_start()` mechanieken).
+Deze string bevat echte **entropie** (onvoorspelbaarheid). Zelfs als je exact de seconde weet waarop de sessie is aangemaakt, kun je nooit raden welk gigantisch willekeurig getal `mt_rand()` op dat moment heeft gegenereerd. Er zijn miljoenen mogelijkheden per seconde, en de SHA1-hash ervan is niet terug te draaien of te voorspellen. (In moderne PHP-versies worden nog robuustere functies gebruikt zoals `random_bytes()` via de standaard `session_start()`.)
+
 </details>
 
 ## 2. Run & Investigate
 
-Start het lab.
+Start het lab en bekijk de cookies.
 
 <DvwaLab module="weak_session_ids" level="impossible" />
 
-Kijk hoeveel er aan de voorkant (in de browser) nog af te leiden is uit de verstrekte cookies. Helemaal niets!
+Klik meerdere keren op de knop en vergelijk de cookie-waarden. Probeer een patroon te ontdekken of een waarde te voorspellen.
 
 ## 3. ✓ Wat moest je zien?
 
 :::tip Controle
-- De cookiewaarde is een **lange willekeurige hash** (40 hex-tekens van SHA-1) die geen herkenbaar patroon vertoont.
-- Twee opeenvolgende klikken geven hashes die in **niets** op elkaar lijken — geen oplopende cijfers, geen tijds-correlatie zichtbaar.
-- Crackstation of Epoch Converter geven nu **niets bruikbaars** terug — de invoer bevat genoeg entropie om unieken te garanderen.
+- De cookie-waarden zijn lange, willekeurig lijkende strings zonder enig zichtbaar patroon.
+- Elke klik geeft een compleet andere waarde — er is geen oplopende reeks of tijdstempel te herkennen.
+- CrackStation of een MD5/SHA1-calculator kan de waarden niet ontcijferen.
 
-Zie je tóch een patroon? Controleer dat het level rechtsboven op **Impossible** staat.
+Zie je toch een patroon? Controleer of het security level correct op **impossible** staat.
 :::
 
-## Wat heb je geleerd?
+**Session Hijacking is dodelijk:** Een overgenomen sessiecookie geeft direct dezelfde rechten als het correct invullen van een wachtwoord.
 
-- **Session Hijacking is dodelijk:** Een overgenomen sessiecookie levert direct dezelfde rechten op als het correct invullen van een wachtwoord.
-- **Tijd of telling is geen random:** Getallen die oplopen, of datums, voelen misschien willekeurig, maar zijn voor hackers zeer eenvoudig voorspelbaar.
-- **Crypto-Hashing verbloemt slechte logica niet:** Een zwakke variabele (1, 2, 3) door MD5 halen maakt het geen sterke variabele, het verbergt de zwakte alleen maar heel even achter een optische illusie. 
-- **Gebruik ingebouwde functies:** Ontwerp nooit zélf een sessiebeheersysteem. Elk populair framework heeft ijzersterke generatoren ingebouwd (`session_start()`).
+**Tijd of teller is geen random:** Getallen die oplopen of datums voelen willekeurig, maar zijn voor hackers eenvoudig voorspelbaar.
+
+**Crypto-hashing verbloemt slechte logica niet:** Een zwakke variabele (1, 2, 3) door MD5 halen maakt het geen sterke variabele — het verbergt de zwakte alleen tijdelijk achter een optische illusie.
+
+**Gebruik ingebouwde functies:** Ontwerp nooit zelf een sessiebeheersysteem. Elk populair framework heeft ijzersterke generatoren ingebouwd via `session_start()`.

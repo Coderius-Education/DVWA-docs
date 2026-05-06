@@ -12,7 +12,7 @@ Tijd om te leren hoe we gastenboeken écht veilig bouwen.
 
 ## 1. Predict (Voorspel)
 
-De onveilige functies zijn vervangen door de zwaarste geschut in PHP:
+De onveilige functies zijn vervangen door het zwaarste geschut in PHP:
 
 ```php
 $message = htmlspecialchars( $_POST['txtMessage'] );
@@ -25,32 +25,34 @@ $stmt->bindParam(':message', $message, PDO::PARAM_STR);
 **Vraag:** Welke twee bekende kwetsbaarheden worden in deze code tegelijkertijd dichtgetimmerd?
 
 <details>
+
 <summary>Antwoord</summary>
 
 1. **SQL Injection** wordt gestopt doordat PDO Prepared Statements (`bindParam`) worden gebruikt voor het opslaan.
-2. **Cross-Site Scripting (XSS)** wordt gestopt doordat álle invoer door `htmlspecialchars()` wordt gehaald. Eventuele `<` en `>` tekens worden geneutraliseerd tot onschuldige tekst.
+2. **Cross-Site Scripting (XSS)** wordt gestopt doordat álle invoer door `htmlspecialchars()` wordt gehaald. Eventuele `<` en `>`-tekens worden geneutraliseerd tot onschadelijke tekst.
+
 </details>
 
 ## 2. Run & Investigate
 
-Start het lab.
+Start het lab en probeer via F12, scripts en afbeeldingen de website te hacken.
 
 <DvwaLab module="xss_stored" level="impossible" />
 
-Probeer via F12, scripts en afbeeldingen de website te hacken. Alles wat je typt zal braaf als tekst in het gastenboek verschijnen.
+Vul `<script>alert(1);</script>` als naam en bericht in. Verhoog de `maxlength` via F12 als dat nodig is. Observeer wat er in het gastenboek verschijnt.
 
 ## 3. ✓ Wat moest je zien?
 
 :::tip Controle
-- Welke payload je ook intypt: **geen popup**, geen verstoring van de pagina.
-- In het gastenboek verschijnt je payload **letterlijk als tekst**, met `<` en `>` zichtbaar.
-- F12 ontwijken via `maxlength` aanpassen helpt niet: alle output is geëscaped door `htmlspecialchars()`.
+- Elke payload verschijnt als **letterlijke tekst** in het gastenboek — geen pop-up.
+- `<script>` staat zichtbaar als tekst in de lijst, niet als uitvoerbare code.
+- Ook na een paginaverversing wordt er niets uitgevoerd.
 
-Krijg je tóch een popup? Dan staat het level rechtsboven niet op **Impossible** — of de gastenboekdatabase bevat nog payloads van eerdere levels (Reset DB via Setup).
+Zie je toch een pop-up? Controleer of het security level correct op **impossible** staat.
 :::
 
-## Wat heb je geleerd?
+**Stored XSS is gevaarlijker dan Reflected XSS:** De payload leeft in de database. Je raakt niet één persoon met een foute link, maar iedereen die de website bezoekt.
 
-- **Stored XSS is gevaarlijker dan Reflected XSS**, omdat de payload in de database leeft. Je raakt niet 1 persoon met een foute link, maar iedereen die de website bezoekt.
-- **Client-Side restricties (zoals `maxlength`) zijn een lachertje.** Een hacker trekt zich daar niets van aan. Bouw áltijd validatie in je backend.
-- De combinatie van **Prepared Statements** en **htmlspecialchars** (of soortgelijke functies in andere talen) is de heilige graal voor veilige formulieren.
+**Client-Side restricties (zoals `maxlength`) zijn een lachertje.** Een hacker trekt zich daar niets van aan. Bouw áltijd validatie in je backend.
+
+De combinatie van **Prepared Statements** en **htmlspecialchars** (of soortgelijke functies in andere talen) is de heilige graal voor veilige formulieren.

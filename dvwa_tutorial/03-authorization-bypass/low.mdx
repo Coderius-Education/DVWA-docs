@@ -8,58 +8,76 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 # Authorization Bypass — Low
 
-In deze uitdaging leren we over **Insecure Direct Object Reference (IDOR)**, oftewel: mag de ingelogde gebruiker wel zien wat hij opvraagt?
+In deze uitdaging leren we over **Insecure Direct Object Reference (IDOR)**: mag de ingelogde gebruiker wel zien wat hij opvraagt?
 
 ## 1. Predict (Voorspel)
 
 Stel, je bent ingelogd op een app en klikt op de knop om je adresgegevens te zien. De URL ziet er zo uit:
 `https://webwinkel.nl/profiel?klant_id=4592`
 
-**Vraag:** Wat gebeurt er als je het id in de URL aanpast naar `4593` en de backend ontwikkelaar geen autorisatiecheck heeft geschreven?
+**Vraag:** Wat gebeurt er als je het id in de URL aanpast naar `4593` en de backend-ontwikkelaar geen autorisatiecheck heeft geschreven?
 
 <details>
+
 <summary>Antwoord</summary>
 
 Als de backend domweg blind vertrouwt op de parameter (`klant_id=4593`), trekt hij de privégegevens van klant 4593 uit de database en laat ze aan jou zien! Dit heet Insecure Direct Object Reference, omdat je direct mag verwijzen naar objecten/data die niet van jou zijn.
+
 </details>
 
-## 2. Run & Investigate
+## 2. Run (Uitvoeren)
 
-Start de lab-omgeving hieronder.
+Start het lab en bekijk hoe de applicatie normaal werkt.
 
 <DvwaLab module="authorization_bypass" level="low" />
 
-Je ziet een formulier met een dropdown-menu waar je een ID kunt selecteren en bekijken.
+Je ziet een formulier met een dropdown-menu. Kies je eigen profiel en klik op de knop. Observeer welke gegevens teruggegeven worden.
 
-## 3. Modify & Make (Aanpassen & Maken)
+## 3. Investigate (Onderzoeken)
 
-Omdat het security level op Low staat, is er geen controle op wie jij bent ten opzichte van de opgevraagde data.
+Kies een ander profiel uit de dropdown dan jouw eigen profiel en klik op de knop om het op te vragen.
 
-Vraag een profiel op van een andere gebruiker dan jezelf.
-
-<details>
-<summary>Tip</summary>
-
-Kies simpelweg een ander persoon in de dropdown en klik op de knop.
-</details>
+**Vraag:** Wat zie je op het scherm? Wat onthult dit over de controles die de server uitvoert?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Omdat er op de backend geen controle wordt uitgevoerd, rolt het profiel van de andere persoon direct uit de server!
+De server geeft gewoon de gegevens van de andere gebruiker terug, zonder te controleren of jij daar recht op hebt. Dit bewijst dat de applicatie op **Low** geen enkele autorisatiecheck uitvoert op de backend. De server vertrouwt blind de ID-waarde die jij meestuurt.
+
 </details>
 
-## 4. ✓ Wat moest je zien?
+## 4. Modify & Make (Aanpassen & Maken)
+
+Je weet nu dat de server geen controle uitvoert op wie jij bent. Jouw doel: vraag het profiel op van de gebruiker met ID `1` (admin), ook als die niet in jouw dropdown staat.
+
+<details>
+
+<summary>Tip</summary>
+
+Kies simpelweg een ander persoon in de dropdown en klik op de knop. Alle beschikbare opties werken al als bewijs — maar kun jij ook een ID opvragen dat helemaal niet in de lijst staat?
+
+</details>
+
+<details>
+
+<summary>Antwoord</summary>
+
+Omdat er op de backend geen controle wordt uitgevoerd, rolt het profiel van elke andere gebruiker direct uit de server. Selecteer een andere optie in de dropdown en klik op Submit. Je ziet direct de gegevens van die gebruiker — ook al zijn dat niet jouw eigen gegevens.
+
+</details>
+
+## 5. ✓ Wat moest je zien?
 
 :::tip Controle
-- Na het kiezen van een ander persoon in de dropdown verschijnt **diens profielgegevens** (naam, e-mail, etc.), niet die van jou.
-- Géén foutmelding, géén "Toegang geweigerd": de server levert klakkeloos data af waar je niets te zoeken had.
-- Je hoefde geen F12 of trucjes — het volstond om gewoon een ander ID te kiezen en te submitten.
+- De server geeft de gegevens van een andere gebruiker terug zodra je een ander ID selecteert.
+- Er verschijnt geen foutmelding of toegangsweigering.
+- De server controleert niet of het gevraagde ID overeenkomt met de ingelogde gebruiker.
 
-Krijg je toch je eigen profiel terug? Controleer dat je écht een ander ID dan dat van jezelf in de dropdown selecteerde voordat je op Submit klikte.
+Zie je een foutmelding? Controleer of het lab correct is opgestart en of je een geldig ID hebt geselecteerd.
 :::
 
-## 5. Er gaat iets mis...
+## 6. Er gaat iets mis...
 
-Wat als je in de dropdown de ID waarde aanpast naar `9999` (een ID dat niet bestaat)?
-Soms crasht de hele pagina met een 500 Internal Server Error omdat de applicatie verwacht dat de opgevraagde data bestaat, en geen 'Niet Gevonden' foutafhandeling heeft geschreven. Hakken draait om grenzen opzoeken!
+Wat als je in de dropdown de ID-waarde aanpast naar `9999` (een ID dat niet bestaat)?
+Soms crasht de hele pagina met een 500 Internal Server Error omdat de applicatie verwacht dat de opgevraagde data bestaat, en geen 'Niet Gevonden' foutafhandeling heeft geschreven. Hacken draait om grenzen opzoeken!

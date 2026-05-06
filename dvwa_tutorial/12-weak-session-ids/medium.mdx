@@ -8,56 +8,78 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 # Weak Session IDs — Medium
 
-De oplopende getallen (1, 2, 3) waren te makkelijk te raden. Tijd voor willekeur.
+De oplopende getallen waren te makkelijk te raden. De ontwikkelaar schakelt over op "tijdgebaseerde" sessie-IDs.
 
 ## 1. Predict (Voorspel)
 
-De backend code gebruikt nu de ingebouwde `time()` functie van PHP om een sessie ID te maken:
+De backend gebruikt nu de ingebouwde `time()`-functie van PHP:
 
 ```php
 $cookie_value = time();
 setcookie("dvwaSession", $cookie_value);
 ```
 
-**Vraag:** De functie `time()` genereert de zogeheten UNIX Epoch Time (het aantal seconden sinds 1 januari 1970). Deze getallen lijken heel willekeurig, zoals: `1714571020`. Maar is dit eigenlijk wel zo willekeurig (random)?
+**Vraag:** De functie `time()` geeft het aantal seconden sinds 1 januari 1970 (UNIX Epoch Time), zoals `1714571020`. Dit ziet er willekeurig uit — maar is het dat ook?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Absoluut niet! Er zit niets willekeurigs aan de huidige datum. De nummers tellen netjes per seconde verder. Als je weet dat je docent om 10:15 is ingelogd, hoef je alleen het UNIX-timestamp van 10:15 (plus of min een paar seconden) op te zoeken op Google. Als je deze berekende timestamp instelt als jouw eigen cookie, steel je onmiddellijk zijn sessie!
+Absoluut niet. De klok tikt elke seconde één getal verder. Als je weet dat iemand om 10:15 is ingelogd, kun je het bijbehorende UNIX-timestamp berekenen (of opzoeken via een Epoch Converter) en dat getal als cookie instellen. De aanvaller hoeft alleen de inlogtijd bij benadering te kennen — een marge van een paar minuten is genoeg om alle mogelijkheden te proberen.
+
 </details>
 
-## 2. Run & Investigate
+## 2. Run (Uitvoeren)
 
-Start het lab.
+Start het lab en genereer een paar sessie-IDs.
 
 <DvwaLab module="weak_session_ids" level="medium" />
 
-Klik op de knop om een sessie te genereren. Je zult een enorm lang nummer zien. Wacht een paar seconden en druk nog eens op de knop. Je zult zien dat de laatste cijfers voorspelbaar met een paar seconden zijn verhoogd.
+Klik op de knop om een sessie te genereren. Noteer het grote getal dat verschijnt. Wacht een paar seconden en druk opnieuw op de knop.
 
-## 3. Modify & Make (Aanpassen & Maken)
+## 3. Investigate (Onderzoeken)
 
-Is er een snelle manier om te achterhalen wanneer een specifieke cookie precies is gemaakt, zodat je in de "buurt" kan zoeken naar andermans sessie?
+Kopieer twee opeenvolgende cookie-waarden en gebruik een online [Epoch Converter](https://www.epochconverter.com/) om ze om te zetten naar een datum/tijd.
 
-<details>
-<summary>Tip</summary>
-
-Kopieer het gegenereerde lange nummer, en zoek op Google naar een "Epoch Time Converter".
-</details>
+**Vraag:** Hoeveel seconden liggen de twee waarden uit elkaar? Wat zegt dit over hoe goed de waarden te raden zijn als je weet wanneer iemand was ingelogd?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Als je het getal plakt in een Epoch Converter (zoals `epochconverter.com`), toont hij exact tot op de seconde nauwkeurig de huidige datum en tijd.
-Als hacker genereer je een tool (bijv. een Python-script) die razendsnel alle cookies voor de afgelopen 60 seconden (`timestamp - 1`, `timestamp - 2`, etc) probeert, en kijkt of je plotseling als admin bent ingelogd!
+De twee waarden liggen precies het aantal seconden uit elkaar dat er tussen de twee kliks zat. Dit bevestigt dat de cookie rechtstreeks de huidige tijd is. Met een inlogtijd op de seconde nauwkeurig is de sessie direct te raden. Met een marge van ±60 seconden zijn er maar 120 mogelijkheden om te proberen — voor een script een kwestie van milliseconden.
+
 </details>
 
-## 4. ✓ Wat moest je zien?
+## 4. Modify & Make (Aanpassen & Maken)
+
+Beredeneer of bereken welk UNIX-timestamp overeenkomt met een recent tijdstip en pas je cookie aan.
+
+<details>
+
+<summary>Tip</summary>
+
+Gebruik een Epoch Converter op internet om de huidige tijd om te zetten naar een UNIX-timestamp. Pas de cookie aan naar dat getal (of enkele seconden eerder/later).
+
+</details>
+
+<details>
+
+<summary>Antwoord</summary>
+
+1. Ga naar een Epoch Converter en noteer het huidige UNIX-timestamp.
+2. Open F12 → **Application** → **Cookies**.
+3. Verander `dvwaSession` naar het berekende timestamp.
+4. In een real-life scenario schrijf je een Python-script dat razendsnel alle timestamps voor de afgelopen 60 seconden probeert.
+
+</details>
+
+## 5. ✓ Wat moest je zien?
 
 :::tip Controle
-- De cookiewaarde is nu een **groot getal van 10 cijfers** (zoals `1714571020`), niet meer een simpele 1 of 2.
-- Klik je een paar keer op de knop met enkele seconden ertussen, dan zie je dat alleen de **laatste cijfers** veranderen — telkens een paar hoger.
-- In epochconverter.com komt die waarde overeen met de huidige datum/tijd tot op de seconde nauwkeurig.
+- De cookie-waarden zijn UNIX-timestamps — ze stijgen in real-time mee met de klok.
+- Twee opeenvolgende waarden verschillen precies het aantal wachtseconden.
+- Met een Epoch Converter kun je direct lezen wanneer een cookie is aangemaakt.
 
-Krijg je nog steeds een klein getal als 1 of 2? Het level staat dan op **Low**, niet op **Medium**.
+Zie je geen grote getallen? Controleer of het security level op **medium** staat.
 :::

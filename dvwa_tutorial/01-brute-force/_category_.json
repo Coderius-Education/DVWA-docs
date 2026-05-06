@@ -1,8 +1,8 @@
 {
-  "label": "Brute force",
-  "position": 10,
+  "label": "Brute Force",
+  "position": 1,
   "link": {
     "type": "generated-index",
-    "description": "Brute force"
+    "description": "Brute Force"
   }
 }

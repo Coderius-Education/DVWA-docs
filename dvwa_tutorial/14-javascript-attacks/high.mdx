@@ -8,57 +8,78 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 # JavaScript Attacks — High
 
-Op het High niveau gebruikt de ontwikkelaar "moderne" JavaScript-trucs zoals complexe logica, scope-verdwijningen en vertragingen.
+Op het High niveau gebruikt de ontwikkelaar complexe cryptografie en event-gebaseerde logica. Maar we hoeven het niet eens te begrijpen.
 
 ## 1. Predict (Voorspel)
 
-In dit level zit de JavaScript die het token berekent diep verstopt, en het script gebruikt ingewikkelde cryptografie waarbij stappen in verschillende onvoorspelbare volgordes worden geladen.
+In dit level zit de tokengeneratie diep verstopt in ingewikkelde cryptografische JavaScript-logica die via Event Listeners werkt. Er is geen simpele `generate_token()`-functie meer om aan te roepen.
 
-**Vraag:** Waarom zou een hacker zich eigenlijk druk maken om het helemaal ontcijferen van al die wiskundige JavaScript code? Kunnen we de browser het ingewikkelde werk niet gewoon voor ons laten doen?
+**Vraag:** Waarom hoef je als hacker de complexe cryptografische JavaScript helemaal niet te begrijpen of na te bouwen?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Inderdaad! We hoeven het script helemaal niet te begrijpen of na te bouwen.
-Het JavaScript bestand zit vaak vastgeknoopt aan acties op de pagina ("Event Listeners", zoals typen of klikken). Als we uitzoeken *wanneer* het script normaal gesproken getriggerd wordt om de hash te berekenen, kunnen we die actie gewoon uitvoeren. We veranderen de tekst, en de browser zorgt er dan vanzelf voor dat het ingewikkelde token netjes op de achtergrond klopt!
+We hoeven het script niet te begrijpen — we laten de browser het ingewikkelde werk voor ons doen. Het JavaScript is gekoppeld aan acties op de pagina (Event Listeners zoals "typen" of "klikken buiten een veld"). Als we die actie gewoon uitvoeren zoals bedoeld, berekent de browser vanzelf het correcte token en plaatst dat in het verborgen veld. We hoeven alleen te weten **wanneer** het token berekend wordt.
+
 </details>
 
-## 2. Run & Investigate
+## 2. Run (Uitvoeren)
 
 Start het lab.
 
 <DvwaLab module="javascript_attacks" level="high" />
 
-> ⚠️ **Labbeperking:** Deze aanval vereist toegang tot de **F12 Console** en **Sources** van de kwetsbare pagina. Omdat het lab in een beveiligd iframe draait, is dit beperkt mogelijk. Voor de volledige ervaring heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
+> ⚠️ **Labbeperking:** Deze aanval vereist toegang tot de F12 Sources en Console. Omdat het lab in een beveiligd iframe draait, is dit beperkt mogelijk. Voor de volledige ervaring heb je een [lokale DVWA-installatie](/docs/dvwa_installatie) nodig.
 
-Probeer `success` te typen en klik op verzenden. Het mislukt.
+Vul `success` in en klik op Submit. Observeer de foutmelding.
 
-## 3. Modify & Make (Aanpassen & Maken)
+## 3. Investigate (Onderzoeken)
 
-Onderzoek de broncode of bedenk een patroon.
+Open F12 → **Sources** en bekijk het `high.js`-bestand. Zoek naar Event Listeners: zoek naar woorden als `onblur`, `onfocus`, `onchange`, of `addEventListener`.
 
-<details>
-<summary>Tip</summary>
-
-Kijk in het tabblad Sources naar het `high.js` bestand. Je zult zien dat de cryptografie logica pas afvuurt als er op bepaalde knoppen gedrukt wordt of elementen in focus zijn.
-Als je op de pagina het woord "success" intypt... verlaat je het invoervak dan ook netjes, of druk je direct op enter?
-</details>
+**Vraag:** Welk JavaScript-event triggert de tokengeneratie? Wanneer precies wordt het token berekend — bij het typen, bij het verlaten van het veld, of bij het klikken op Submit?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Deze specifieke DVWA uitdaging kent een ingewikkelde keten van JavaScript events. In theorie kun je het in de console oplossen met:
-`document.getElementById("token").value = sha256("success")` (na veel reverse engineering van hun JS-code). 
+Het token wordt berekend via het `onblur`-event — dat vurt af op het moment dat het invoerveld zijn "focus" **verliest** (wanneer je ergens buiten het veld klikt). Dit betekent: type `success`, klik daarna ergens buiten het invoervak, wacht even, en klik dan pas op Submit. De browser heeft dan het token al stilletjes bijgewerkt.
 
-Een makkelijkere manier in sommige versies: het token wordt soms geüpdatet zodra het invoerveld z'n "focus" verliest (`onblur`). Typ `success`, klik met je muis ergens buiten het vakje in het witte gebied, wacht een tel, en druk dan op Submit! Je hebt zojuist de Event Listener van JavaScript z'n werk laten doen.
 </details>
 
-## 4. ✓ Wat moest je zien?
+## 4. Modify & Make (Aanpassen & Maken)
+
+Activeer de Event Listener door de juiste gebruikersinteractie uit te voeren.
+
+<details>
+
+<summary>Tip</summary>
+
+Type `success` in het invoerveld. Klik daarna met je muis **ergens buiten het invoervak** (in het witte gebied van de pagina). Wacht een seconde en klik dan pas op Submit.
+
+</details>
+
+<details>
+
+<summary>Antwoord</summary>
+
+1. Type `success` in het invoerveld.
+2. Klik met je muis buiten het veld — het `onblur`-event vuurt af en JavaScript berekent het token.
+3. Klik op Submit. De server accepteert de request.
+
+Als alternatief: open de Console en typ:
+`document.getElementById("token").value = sha256("success")`
+(dit vereist dat je de exacte hash-methode uit de broncode hebt achterhaald.)
+
+</details>
+
+## 5. ✓ Wat moest je zien?
 
 :::tip Controle
-- In een **lokale DVWA-installatie**: typ `success`, klik buiten het invoervak (verlies focus), en Submit — dan krijg je **"Well done!"**, terwijl direct Submit zonder focus-verlies "Invalid token" geeft.
-- In F12 Elements zie je dat de waarde van het verborgen `<input name="token">` verandert op het moment dat je het invoerveld verlaat.
-- In het **iframe-lab hier**: via **Bekijk broncode** zie je de event listener (`onblur`/`change`) gekoppeld aan de input — dat is de trigger die je laat afgaan.
+- Direct klikken op Submit na het typen van `success` geeft "Invalid Token".
+- Na het klikken **buiten** het invoerveld (onblur) én daarna op Submit slaagt het formulier.
+- De browser heeft het token zelf berekend via de Event Listener — zonder dat we de cryptografie hoefden te begrijpen.
 
-Geen succesmelding ondanks focus-wisseling? Wacht na het buiten-klikken een halve seconde voordat je Submit indrukt — sommige listeners hebben een korte vertraging.
+Werkt het niet? Zorg dat je echt het veld verlaat door buiten het invoerelement te klikken, niet direct op Submit.
 :::

@@ -8,48 +8,70 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 # SQL Injection (Blind) — Medium
 
-Op het Medium level is het formulier weer veranderd naar een dropdown-menu, én ontbreken de aanhalingstekens in de query, net als bij de gewone SQL Injection.
+Op het Medium level is het formulier veranderd naar een dropdown-menu én ontbreken de aanhalingstekens in de query.
 
 ## 1. Predict (Voorspel)
 
-We weten nu hoe een Ja/Nee (Boolean) injectie werkt. Soms vertelt de applicatie je echter niet eens "Exists" of "Missing", maar gebeurt er in beide gevallen op de pagina *exact hetzelfde*. Hoe kunnen we dán Yes/No vragen stellen aan de server?
+We weten nu hoe een Ja/Nee (Boolean) injectie werkt. Soms vertelt de applicatie je echter niet eens "Exists" of "Missing", maar gebeurt er in beide gevallen op de pagina *exact hetzelfde*. Hoe kunnen we dán Ja/Nee-vragen stellen aan de server?
 
 <details>
+
 <summary>Antwoord</summary>
 
-We kunnen overstappen op **Time-Based Blind SQL Injection**. 
-We commanderen de database om, *alleen* als onze bewering waar is, 5 seconden te gaan wachten voordat hij antwoord geeft. Als we direct antwoord krijgen, was de bewering blijkbaar onwaar. Als het verzoek lang duurt, weten we dat de bewering waar was!
+We kunnen overstappen op **Time-Based Blind SQL Injection**.
+We commanderen de database om, *alleen* als onze bewering waar is, 5 seconden te wachten voordat hij antwoord geeft. Als we direct antwoord krijgen, was de bewering onwaar. Als het verzoek lang duurt, weten we dat de bewering waar was!
+
 </details>
 
-## 2. Run & Investigate
+## 2. Run (Uitvoeren)
 
-Start het lab. Je ziet de vertrouwde dropdown-box (waar je niet vrij in kunt typen).
+Start het lab en bekijk het formulier.
 
 <DvwaLab module="sql_injection_blind" level="medium" />
 
-## 3. Modify & Make (Aanpassen & Maken)
+Je ziet de vertrouwde dropdown-box (waar je niet vrij in kunt typen). Selecteer ID `1` en klik op Submit. Noteer hoe snel de pagina reageert.
 
-Omdat de backend `user_id = $id` verwerkt (zonder aanhalingstekens), kunnen we een wiskundige Time-Based aanval toevoegen via de Developer Tools of je browser.
+## 3. Investigate (Onderzoeken)
+
+Open de Developer Tools (F12) en zoek het `<select>`-element. Verander de `value` van één van de opties naar `1 AND SLEEP(5)` via de inspector en klik daarna op Submit.
+
+**Vraag:** Wat valt je op aan de laadtijd van de pagina? Wat onthult dit?
 
 <details>
+
+<summary>Antwoord</summary>
+
+De pagina wacht nu 5 seconden voordat hij antwoord geeft! Dit bewijst dat de applicatie jouw invoer ongefilterd in de SQL-query plakt en dat de database het `SLEEP(5)`-commando daadwerkelijk uitvoert. De backend filtert de dropdown-waarde niet — de bescherming zat alleen in de frontend (de dropdown), niet in de backend.
+
+</details>
+
+## 4. Modify & Make (Aanpassen & Maken)
+
+Omdat de backend `user_id = $id` verwerkt (zonder aanhalingstekens), kun je een Time-Based aanval uitvoeren via de Developer Tools.
+
+<details>
+
 <summary>Tip</summary>
 
-Druk op F12. Inspecteer het formulier, en verander de `value="1"` van een van de opties. Gebruik het SQL commando `SLEEP(5)` of soortgelijke vertragings-commando's afhankelijk van de database.
+Druk op F12. Inspecteer het formulier, en verander de `value="1"` van een van de opties naar de gewenste payload. Gebruik het SQL-commando `SLEEP(5)`.
+
 </details>
 
 <details>
+
 <summary>Antwoord</summary>
 
 Verander de optie naar: `<option value="1 AND SLEEP(5)">`
-Selecteer deze in de webpagina en klik Submit. De browser wacht nu 5 volle seconden voordat de webpagina weer verschijnt! Je hebt succesvol de wachttijd gemanipuleerd en daarmee bewijs geleverd dat er een blind gat in de database zit.
+Selecteer deze in de webpagina en klik Submit. De browser wacht nu 5 volle seconden voordat de webpagina weer verschijnt! Je hebt succesvol de wachttijd gemanipuleerd en daarmee bewezen dat er een blind gat in de database zit.
+
 </details>
 
-## 4. ✓ Wat moest je zien?
+## 5. ✓ Wat moest je zien?
 
 :::tip Controle
-- Bij een normaal ID (`1`) krijg je vrijwel direct een respons.
-- Bij payload `1 AND SLEEP(5)` blijft het lab **5 volle seconden hangen** voordat er iets verschijnt — dat is de timing-bevestiging.
-- In F12 Network zie je dat de POST-request inderdaad ~5 seconden in "Pending" status staat.
+- Na het invullen van `1 AND SLEEP(5)` duurt het zichtbaar **5 seconden** voordat de pagina reageert.
+- Een normaal ID (zoals `1`) geeft direct antwoord — geen vertraging.
+- Het verschil in laadtijd bewijst dat de SQL-code door de database wordt uitgevoerd.
 
-Geen vertraging? Dan veranderde je de zichtbare tekst tussen de `<option>`-tags in plaats van het `value`-attribuut. Pas in F12 Elements de `value="…"` zelf aan.
+Zie je geen vertraging? Controleer of je de waarde correct hebt aangepast in de inspector en of je op Submit hebt geklikt ná het wijzigen.
 :::

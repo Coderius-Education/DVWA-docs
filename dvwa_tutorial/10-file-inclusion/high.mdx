@@ -8,11 +8,11 @@ import DvwaLab from '@site/src/components/DvwaLab';
 
 # File Inclusion — High
 
-Om van het 'knippen en plakken' probleem af te zijn, stapt de ontwikkelaar over op een strengere aanpak.
+Om van het knippen-en-plakken-probleem af te zijn, stapt de ontwikkelaar over op een strengere aanpak.
 
 ## 1. Predict (Voorspel)
 
-De server controleert nu of de bestandsnaam strict aan bepaalde voorwaarden voldoet, anders gooit hij direct een "ERROR: File not found!".
+De server controleert nu of de bestandsnaam aan strenge voorwaarden voldoet, anders gooit hij direct een foutmelding:
 
 ```php
 $file = $_GET['page'];
@@ -23,45 +23,67 @@ if( !fnmatch( "file*", $file ) && $file != "include.php" ) {
 include($file);
 ```
 
-**Vraag:** Het bestand MOET dus exact `include.php` heten, óf de bestandsnaam moet beginnen met het woordje `file`. Hoe kan dit woordje `file` een onbedoelde achterdeur openzetten in Linux?
+**Vraag:** De bestandsnaam moet exact `include.php` heten, of beginnen met het woord `file`. Hoe kan dit ene woord `file` een onbedoelde achterdeur openzetten?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Op Linux en Mac bestaat het zogeheten **file:// protocol** (net zoals je http:// en ftp:// hebt). Dit wordt gebruikt om in een browser naar lokale bestanden te verwijzen op je harde schijf. Omdat de ontwikkelaar eist dat de invoer begint met `file`, staat hij onbewust het gebruik van het `file://` protocol toe, waarmee we de hele harde schijf kunnen uitlezen!
+Op Linux en macOS bestaat het **`file://`-protocol** (net als `http://` en `ftp://`). Dit protocol wordt gebruikt om in een browser naar lokale bestanden op de harde schijf te verwijzen. Omdat de ontwikkelaar eist dat de invoer begint met `file`, staat hij onbewust het gebruik van dit protocol toe — waarmee de volledige harde schijf uitgelezen kan worden!
+
 </details>
 
-## 2. Run & Investigate
+## 2. Run (Uitvoeren)
 
-Start het lab:
+Start het lab en bevestig dat de normale pagina's werken.
 
 <DvwaLab module="file_inclusion" level="high" />
 
-## 3. Modify & Make (Aanpassen & Maken)
+Probeer `?page=file1.php` en `?page=file2.php`. Observeer dat dit werkt. Probeer daarna `?page=../../etc/passwd`.
 
-Bedenk een payload die begint met het woord `file` en waarmee je alsnog naar `/etc/passwd` navigeert.
+## 3. Investigate (Onderzoeken)
 
-<details>
-<summary>Tip</summary>
+Probeer verschillende payloads en kijk welke de "ERROR: File not found!"-melding geven en welke door het filter komen.
 
-Gebruik het file protocol en navigeer vanaf de absolute root van de harde schijf, zonder met `../` te hoeven werken.
-</details>
+**Vraag:** Welk patroon moet jouw payload hebben om door de `fnmatch("file*", ...)` check te komen? Welk protocol begint toevallig ook met het woord `file`?
 
 <details>
+
 <summary>Antwoord</summary>
 
-Vul in de URL in:
-`?page=file:///etc/passwd`
+De `fnmatch("file*", $file)`-check laat alles door dat begint met de vier letters `f`, `i`, `l`, `e`. Het `file://`-protocol begint precies met die letters en wordt dus door de check heen gelaten. Omdat `include()` ook het `file://`-protocol begrijpt, kun je het absolute pad van elk bestand op de server opgeven zonder `../` te hoeven gebruiken.
 
-Omdat de string netjes begint met "file", gooit het beveiligingsfilter het niet weg. De include functie leest vervolgens letterlijk het file protocol uit en toont het wachtwoordenbestand!
 </details>
 
-## 4. ✓ Wat moest je zien?
+## 4. Modify & Make (Aanpassen & Maken)
+
+Bouw een payload die begint met het woord `file` en navigeer direct naar `/etc/passwd`.
+
+<details>
+
+<summary>Tip</summary>
+
+Gebruik het `file://`-protocol en geef het absolute pad op vanuit de root van de harde schijf — je hoeft niet met `../` te werken.
+
+</details>
+
+<details>
+
+<summary>Antwoord</summary>
+
+Vul in de URL:
+`?page=file:///etc/passwd`
+
+Omdat de string netjes begint met "file", gooit het beveiligingsfilter het niet weg. De `include()`-functie leest vervolgens letterlijk het file-protocol uit en toont het wachtwoordenbestand.
+
+</details>
+
+## 5. ✓ Wat moest je zien?
 
 :::tip Controle
-- Met `../../../etc/passwd` krijg je nu **"ERROR: File not found!"** — de `fnmatch`-check weigert je payload.
-- Met `file:///etc/passwd` verschijnt alsnog de **passwd-inhoud** beginnend met `root:x:0:0:…`.
-- Het verschil zit volledig in dat eerste woordje "file": de blacklist denkt dat dit een legitiem bestandsnaampatroon is.
+- De pagina toont de inhoud van `/etc/passwd` via het `file://`-protocol.
+- De aanval met `../../etc/passwd` geeft nog steeds "ERROR: File not found!" — de whitelist werkt voor dat patroon.
+- Het `file://`-protocol is een blinde vlek in de whitelist-check.
 
-Krijg je nog steeds "File not found"? Let op de drie schuine strepen na `file:` (`file:///`) — de eerste twee horen bij het protocol, de derde bij de root van de harde schijf.
+Werkt het niet? Controleer of je drie slashes gebruikt: `file:///etc/passwd` (twee na `file:` en één voor het absolute pad).
 :::
